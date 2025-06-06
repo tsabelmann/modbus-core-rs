@@ -1,3 +1,5 @@
+#![no_std]
+
 // Register related types and helper functions.
 pub mod register;
 
