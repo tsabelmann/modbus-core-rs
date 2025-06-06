@@ -4,9 +4,9 @@ mod reg_u8;
 pub use reg_u8::{RegU8, RegU8Iter, RegU8IterMut};
 
 mod reg_u16;
-
-
 mod reg_u32;
+pub use reg_u32::{RegU32, RegU32Iter, RegU32IterMut};
+
 mod reg_u64;
 
 // signed integer based registers
