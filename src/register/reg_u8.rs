@@ -7,7 +7,9 @@ pub struct RegU8 {
 }
 
 impl RegU8 {
-    /// # Examples
+    /// Creates a new u8 based modbus register.
+    /// 
+    /// # Example
     ///
     /// ```
     /// use modbus_core::register::RegU8;
@@ -18,6 +20,40 @@ impl RegU8 {
         RegU8 {
             data: [(value as u16) & 0xFF]
         }
+    }
+
+    /// Creates an immutable register iterator.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use modbus_core::register::RegU8;
+    /// 
+    /// let reg = RegU8::new(42);
+    /// let iter = reg.iter();
+    /// for value in iter {
+    ///     println!("value={}", value);
+    /// }
+    /// ````
+    pub const fn iter(&self) -> RegU8Iter<'_> {
+        RegU8Iter::new(self)
+    }
+
+    /// Creates an immutable register iterator.
+    /// 
+    /// # Example
+    ///
+    /// ```
+    /// use modbus_core::register::RegU8;
+    /// 
+    /// let mut reg = RegU8::new(42);
+    /// let iter = reg.iter_mut();
+    /// for value in iter {
+    ///     println!("value={}", value);
+    /// }
+    /// ````
+    pub const fn iter_mut(&mut self) -> RegU8IterMut<'_> {
+        RegU8IterMut::new(self)
     }
 }
 
@@ -35,7 +71,7 @@ impl From<&u8> for RegU8 {
 
 impl From<RegU8> for u8 {
     fn from(value: RegU8) -> Self {
-        (value.data[0] & 0xFF) as u8
+        u8::from(&value)
     }
 }
 
@@ -167,8 +203,6 @@ mod reg_u8_tests {
         assert_eq!(Some(&3), iter.next());
         assert_eq!(None, iter.next());
 
-
-
         // Change values
         let iter0 = RegU8IterMut::new(&mut reg0);
         let iter1 = RegU8IterMut::new(&mut reg1);
@@ -205,4 +239,12 @@ mod reg_u8_tests {
         assert_eq!(Some(&1), iter.next());
         assert_eq!(None, iter.next());
     }
+
+    #[test]
+    fn from_to_u8_001() {
+        let reg = RegU8::new(42);
+        let value = u8::from(reg);
+        assert_eq!(value, 42);
+    }
+
 }
