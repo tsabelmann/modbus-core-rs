@@ -168,8 +168,8 @@ mod reg_i32_tests {
         let reg0 = RegI32::new(-1);
         let reg1 = RegI32::new(-2);
 
-        let iter0 = RegI32Iter::new(&reg0);
-        let iter1 = RegI32Iter::new(&reg1);
+        let iter0 = reg0.reg_iter();
+        let iter1 = reg1.reg_iter();
 
         let mut iter = iter0.chain(iter1);
         assert_eq!(Some(&0xFFFF), iter.next());
