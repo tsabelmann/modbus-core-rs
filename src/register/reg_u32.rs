@@ -115,13 +115,10 @@ impl<'a> Iterator for RegU32Iter<'a> {
     
     fn next(&mut self) -> Option<Self::Item> {
         match self.index {
-            0 => {
+            0..2 => {
+                let idx = self.index as usize;
                 self.index += 1;
-                Some(&self.value.data[0])
-            },
-            1 => {
-                self.index += 1;
-                Some(&self.value.data[1])
+                Some(&self.value.data[idx])
             },
             _ => None
         }
@@ -133,22 +130,14 @@ impl<'a> Iterator for RegU32IterMut<'a> {
     
     fn next(&mut self) -> Option<Self::Item> {
         match self.index {
-            0 => {
+            0..2 => {
+                let idx = self.index as usize;
                 self.index += 1;
                 let value_ptr: *mut RegU32 = self.value;
                 
                 // unsafe nötig, weil wir &'a mut u16 aus &mut self.value extrahieren wollen
                 unsafe {
-                    Some(&mut (*value_ptr).data[0])
-                }
-            },
-            1 => {
-                self.index += 1;
-                let value_ptr: *mut RegU32 = self.value;
-                
-                // unsafe nötig, weil wir &'a mut u16 aus &mut self.value extrahieren wollen
-                unsafe {
-                    Some(&mut (*value_ptr).data[1])
+                    Some(&mut (*value_ptr).data[idx])
                 }
             },
             _ => None
