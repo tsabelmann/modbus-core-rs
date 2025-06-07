@@ -160,7 +160,7 @@ impl IntoRegIterMut for RegU16 {
 
 
 #[cfg(test)]
-mod reg_u8_tests {
+mod reg_u16_tests {
     use super::*;
 
     #[test]
