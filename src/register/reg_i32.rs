@@ -6,7 +6,7 @@ pub struct RegI32 {
 }
 
 impl RegI32 {
-    /// Creates a new i32 based modbus register.
+    /// Creates a new [i32] based modbus register.
     /// 
     /// # Example
     ///
@@ -164,7 +164,7 @@ mod reg_i32_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegI32::new(-1);
         let reg1 = RegI32::new(-2);
 
@@ -180,7 +180,7 @@ mod reg_i32_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegI32::new(-1);
         let mut reg1 = RegI32::new(-2);
         let mut reg2 = RegI32::new(-3);
