@@ -1,1 +1,1 @@
-# modbus-core-rs
+# modbus-stack-rs
