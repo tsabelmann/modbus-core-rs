@@ -1,13 +1,13 @@
 use super::{IntoRegIter, IntoRegIterMut};
 
 
-/// Modbus register that can be converter to and from [u8].
+/// Modbus register that can be converter to and from [bool].
 pub struct RegBool {
     data: [u16; 1]
 }
 
 impl RegBool {
-    /// Creates a new bool based modbus register.
+    /// Creates a new [bool] based modbus register.
     /// 
     /// # Example
     ///
@@ -89,13 +89,13 @@ impl From<&RegBool> for bool {
     }
 }
 
-/// Immutable register iterator for [RegU8].
+/// Immutable register iterator for [RegBool].
 pub struct RegBoolIter<'a> {
     value: &'a RegBool,
     index: u8
 }
 
-/// Mutable register iterator for [RegU8].
+/// Mutable register iterator for [RegBool].
 pub struct RegBoolIterMut<'a> {
     value: &'a mut RegBool,
     index: u8
@@ -172,7 +172,7 @@ mod reg_bool_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegBool::new(false);
         let reg1 = RegBool::new(true);
         let reg2 = RegBool::new(false);
@@ -192,7 +192,7 @@ mod reg_bool_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegBool::new(false);
         let mut reg1 = RegBool::new(true);
         let mut reg2 = RegBool::new(true);
