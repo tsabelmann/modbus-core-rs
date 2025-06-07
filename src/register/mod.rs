@@ -33,6 +33,7 @@ mod reg_f32;
 pub use reg_f32::{RegF32, RegF32Iter, RegF32IterMut};
 
 mod reg_f64;
+pub use reg_f64::{RegF64, RegF64Iter, RegF64IterMut};
 
 /// Trait for creating an immutable register iterator. See [IntoRegIterMut] for mutable register iterator.
 pub trait IntoRegIter {
