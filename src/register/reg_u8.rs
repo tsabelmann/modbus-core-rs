@@ -14,7 +14,7 @@ impl RegU8 {
     /// ```
     /// use modbus_stack::register::RegU8;
     /// 
-    /// let x = RegU8::new(42);
+    /// let reg = RegU8::new(42);
     /// ````
     pub const fn new(value: u8) -> RegU8 {
         RegU8 {
