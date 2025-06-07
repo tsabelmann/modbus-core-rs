@@ -11,6 +11,7 @@ mod reg_u32;
 pub use reg_u32::{RegU32, RegU32Iter, RegU32IterMut};
 
 mod reg_u64;
+pub use reg_u64::{RegU64, RegU64Iter, RegU64IterMut};
 
 // signed integer based registers
 
