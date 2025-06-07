@@ -1,13 +1,13 @@
 use super::{IntoRegIter, IntoRegIterMut};
 
 
-/// Modbus register that can be converter to and from [u8].
+/// Modbus register that can be converter to and from [u16].
 pub struct RegU16 {
     data: [u16; 1]
 }
 
 impl RegU16 {
-    /// Creates a new u16 based modbus register.
+    /// Creates a new [u16] based modbus register.
     /// 
     /// # Example
     ///
@@ -81,13 +81,13 @@ impl From<&RegU16> for u16 {
     }
 }
 
-/// Immutable register iterator for [RegU8].
+/// Immutable register iterator for [RegU16].
 pub struct RegU16Iter<'a> {
     value: &'a RegU16,
     index: u8
 }
 
-/// Mutable register iterator for [RegU8].
+/// Mutable register iterator for [RegU16].
 pub struct RegU16IterMut<'a> {
     value: &'a mut RegU16,
     index: u8
