@@ -1,4 +1,5 @@
 mod reg_bool;
+pub use reg_bool::{RegBool, RegBoolIter, RegBoolIterMut};
 
 mod reg_u8;
 pub use reg_u8::{RegU8, RegU8Iter, RegU8IterMut};
