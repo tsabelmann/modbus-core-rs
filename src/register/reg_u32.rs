@@ -175,7 +175,7 @@ mod reg_u32_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegU32::new(0x11223344);
         let reg1 = RegU32::new(0xAABBCCDD);
 
@@ -191,7 +191,7 @@ mod reg_u32_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegU32::new(0x11223344);
         let mut reg1 = RegU32::new(0x55667788);
         let mut reg2 = RegU32::new(0x99AABBCC);
