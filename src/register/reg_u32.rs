@@ -29,12 +29,12 @@ impl RegU32 {
     /// use modbus_stack::register::RegU32;
     /// 
     /// let reg = RegU32::new(42);
-    /// let iter = reg.iter();
+    /// let iter = reg.reg_iter();
     /// for value in iter {
     ///     println!("value={}", value);
     /// }
     /// ````
-    pub const fn iter(&self) -> RegU32Iter<'_> {
+    pub const fn reg_iter(&self) -> RegU32Iter<'_> {
         RegU32Iter::new(self)
     }
 
@@ -46,12 +46,12 @@ impl RegU32 {
     /// use modbus_stack::register::RegU32;
     /// 
     /// let mut reg = RegU32::new(42);
-    /// let iter = reg.iter_mut();
+    /// let iter = reg.reg_iter_mut();
     /// for value in iter {
     ///     *value = 0xADAC;
     /// }
     /// ````
-    pub const fn iter_mut(&mut self) -> RegU32IterMut<'_> {
+    pub const fn reg_iter_mut(&mut self) -> RegU32IterMut<'_> {
         RegU32IterMut::new(self)
     }
 }
@@ -197,10 +197,10 @@ mod reg_u32_tests {
         let mut reg2 = RegU32::new(0x99AABBCC);
         let mut reg3 = RegU32::new(0xDDEEFF00);
 
-        let iter0 = reg0.iter();
-        let iter1 = reg1.iter();
-        let iter2 = reg2.iter();
-        let iter3 = reg3.iter();
+        let iter0 = reg0.reg_iter();
+        let iter1 = reg1.reg_iter();
+        let iter2 = reg2.reg_iter();
+        let iter3 = reg3.reg_iter();
 
         // check values equal initialization
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
@@ -215,10 +215,10 @@ mod reg_u32_tests {
         assert_eq!(None, iter.next());
 
         // Change values
-        let iter0 = reg0.iter_mut();
-        let iter1 = reg1.iter_mut();
-        let iter2 = reg2.iter_mut();
-        let iter3 = reg3.iter_mut();
+        let iter0: RegU32IterMut<'_> = reg0.reg_iter_mut();
+        let iter1 = reg1.reg_iter_mut();
+        let iter2 = reg2.reg_iter_mut();
+        let iter3 = reg3.reg_iter_mut();
         
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         if let Some(reff) = iter.next() {
@@ -254,10 +254,10 @@ mod reg_u32_tests {
         }
 
         // check for change
-        let iter0 = reg0.iter();
-        let iter1 = reg1.iter();
-        let iter2 = reg2.iter();
-        let iter3 = reg3.iter();
+        let iter0 = reg0.reg_iter();
+        let iter1 = reg1.reg_iter();
+        let iter2 = reg2.reg_iter();
+        let iter3 = reg3.reg_iter();
         
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         assert_eq!(Some(&0x00FF), iter.next());
