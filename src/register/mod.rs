@@ -30,6 +30,8 @@ pub use reg_i64::{RegI64, RegI64Iter, RegI64IterMut};
 // IEEE-754 floats
 
 mod reg_f32;
+pub use reg_f32::{RegF32, RegF32Iter, RegF32IterMut};
+
 mod reg_f64;
 
 /// Trait for creating an immutable register iterator. See [IntoRegIterMut] for mutable register iterator.
