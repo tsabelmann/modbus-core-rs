@@ -4,6 +4,8 @@ mod reg_u8;
 pub use reg_u8::{RegU8, RegU8Iter, RegU8IterMut};
 
 mod reg_u16;
+pub use reg_u16::{RegU16, RegU16Iter, RegU16IterMut};
+
 mod reg_u32;
 pub use reg_u32::{RegU32, RegU32Iter, RegU32IterMut};
 
