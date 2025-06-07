@@ -164,7 +164,7 @@ mod reg_i16_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegI16::new(-1);
         let reg1 = RegI16::new(-2);
         let reg2 = RegI16::new(-3);
@@ -184,7 +184,7 @@ mod reg_i16_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegI16::new(-1);
         let mut reg1 = RegI16::new(-2);
         let mut reg2 = RegI16::new(-3);
