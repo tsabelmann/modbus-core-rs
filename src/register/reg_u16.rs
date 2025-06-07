@@ -164,7 +164,7 @@ mod reg_u16_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegU16::new(0x1234);
         let reg1 = RegU16::new(0x5678);
         let reg2 = RegU16::new(0x9ABC);
@@ -184,7 +184,7 @@ mod reg_u16_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegU16::new(0x1234);
         let mut reg1 = RegU16::new(0x5678);
         let mut reg2 = RegU16::new(0x9ABC);

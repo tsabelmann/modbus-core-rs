@@ -1,12 +1,12 @@
 use super::{IntoRegIter, IntoRegIterMut};
 
-/// Modbus register that can be converter to and from [u8].
+/// Modbus register that can be converter to and from [u32].
 pub struct RegU32 {
     data: [u16; 2]
 }
 
 impl RegU32 {
-    /// Creates a new u32 based modbus register.
+    /// Creates a new [u32] based modbus register.
     /// 
     /// # Example
     ///
