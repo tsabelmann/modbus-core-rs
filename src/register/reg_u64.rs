@@ -1,12 +1,12 @@
 use super::{IntoRegIter, IntoRegIterMut};
 
-/// Modbus register that can be converter to and from [u8].
+/// Modbus register that can be converter to and from [u64].
 pub struct RegU64 {
     data: [u16; 4]
 }
 
 impl RegU64 {
-    /// Creates a new u32 based modbus register.
+    /// Creates a new [u64] based modbus register.
     /// 
     /// # Example
     ///
@@ -172,7 +172,7 @@ mod reg_u64_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegU64::new(0x1122334455667788);
         let reg1 = RegU64::new(0x8877665544332211);
 
@@ -192,7 +192,7 @@ mod reg_u64_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegU64::new(0x11223344);
         let mut reg1 = RegU64::new(0x55667788);
 
