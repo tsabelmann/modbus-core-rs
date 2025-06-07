@@ -11,7 +11,7 @@ impl RegU32 {
     /// # Example
     ///
     /// ```
-    /// use modbus_core::register::RegU32;
+    /// use modbus_stack::register::RegU32;
     /// 
     /// let reg = RegU32::new(42);
     /// ````
@@ -26,7 +26,7 @@ impl RegU32 {
     /// # Example
     ///
     /// ```
-    /// use modbus_core::register::RegU32;
+    /// use modbus_stack::register::RegU32;
     /// 
     /// let reg = RegU32::new(42);
     /// let iter = reg.iter();
@@ -43,7 +43,7 @@ impl RegU32 {
     /// # Example
     ///
     /// ```
-    /// use modbus_core::register::RegU32;
+    /// use modbus_stack::register::RegU32;
     /// 
     /// let mut reg = RegU32::new(42);
     /// let iter = reg.iter_mut();

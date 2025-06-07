@@ -12,7 +12,7 @@ impl RegU8 {
     /// # Example
     ///
     /// ```
-    /// use modbus_core::register::RegU8;
+    /// use modbus_stack::register::RegU8;
     /// 
     /// let x = RegU8::new(42);
     /// ````
@@ -27,7 +27,7 @@ impl RegU8 {
     /// # Example
     ///
     /// ```
-    /// use modbus_core::register::RegU8;
+    /// use modbus_stack::register::RegU8;
     /// 
     /// let reg = RegU8::new(42);
     /// let iter = reg.iter();
@@ -44,7 +44,7 @@ impl RegU8 {
     /// # Example
     ///
     /// ```
-    /// use modbus_core::register::RegU8;
+    /// use modbus_stack::register::RegU8;
     /// 
     /// let mut reg = RegU8::new(42);
     /// let iter = reg.iter_mut();
