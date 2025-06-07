@@ -16,6 +16,8 @@ pub use reg_u64::{RegU64, RegU64Iter, RegU64IterMut};
 // signed integer based registers
 
 mod reg_i8;
+pub use reg_i8::{RegI8, RegI8Iter, RegI8IterMut};
+
 mod reg_i16;
 mod reg_i32;
 mod reg_i64;
