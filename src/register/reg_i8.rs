@@ -7,7 +7,7 @@ pub struct RegI8 {
 }
 
 impl RegI8 {
-    /// Creates a new i8 based modbus register.
+    /// Creates a new [i8] based modbus register.
     /// 
     /// # Example
     ///
@@ -164,7 +164,7 @@ mod reg_i8_tests {
     use super::*;
 
     #[test]
-    fn iter_001() {
+    fn reg_iter_001() {
         let reg0 = RegI8::new(-1);
         let reg1 = RegI8::new(-2);
         let reg2 = RegI8::new(-3);
@@ -184,7 +184,7 @@ mod reg_i8_tests {
     }
 
     #[test]
-    fn iter_mut_001() {
+    fn reg_iter_mut_001() {
         let mut reg0 = RegI8::new(0x00);
         let mut reg1 = RegI8::new(0x01);
         let mut reg2 = RegI8::new(0x02);
