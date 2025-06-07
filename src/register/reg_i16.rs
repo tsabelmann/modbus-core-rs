@@ -81,13 +81,13 @@ impl From<&RegI16> for i16 {
     }
 }
 
-/// Immutable register iterator for [RegU8].
+/// Immutable register iterator for [RegI16].
 pub struct RegI16Iter<'a> {
     value: &'a RegI16,
     index: u8
 }
 
-/// Mutable register iterator for [RegU8].
+/// Mutable register iterator for [RegI16].
 pub struct RegI16IterMut<'a> {
     value: &'a mut RegI16,
     index: u8
