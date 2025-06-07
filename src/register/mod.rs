@@ -19,6 +19,8 @@ mod reg_i8;
 pub use reg_i8::{RegI8, RegI8Iter, RegI8IterMut};
 
 mod reg_i16;
+pub use reg_i16::{RegI16, RegI16Iter, RegI16IterMut};
+
 mod reg_i32;
 mod reg_i64;
 
