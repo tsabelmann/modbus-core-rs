@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "modbus-core"
+name = "modbus-stack"
 version = "0.1.0"
