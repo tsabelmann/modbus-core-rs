@@ -22,6 +22,8 @@ mod reg_i16;
 pub use reg_i16::{RegI16, RegI16Iter, RegI16IterMut};
 
 mod reg_i32;
+pub use reg_i32::{RegI32, RegI32Iter, RegI32IterMut};
+
 mod reg_i64;
 
 // IEEE-754 floats
