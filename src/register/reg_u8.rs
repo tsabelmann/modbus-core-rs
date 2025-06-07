@@ -30,12 +30,12 @@ impl RegU8 {
     /// use modbus_stack::register::RegU8;
     /// 
     /// let reg = RegU8::new(42);
-    /// let iter = reg.iter();
+    /// let iter = reg.reg_iter();
     /// for value in iter {
     ///     println!("value={}", value);
     /// }
     /// ````
-    pub const fn iter(&self) -> RegU8Iter<'_> {
+    pub const fn reg_iter(&self) -> RegU8Iter<'_> {
         RegU8Iter::new(self)
     }
 
@@ -47,12 +47,12 @@ impl RegU8 {
     /// use modbus_stack::register::RegU8;
     /// 
     /// let mut reg = RegU8::new(42);
-    /// let iter = reg.iter_mut();
+    /// let iter = reg.reg_iter_mut();
     /// for value in iter {
     ///     println!("value={}", value);
     /// }
     /// ````
-    pub const fn iter_mut(&mut self) -> RegU8IterMut<'_> {
+    pub const fn reg_iter_mut(&mut self) -> RegU8IterMut<'_> {
         RegU8IterMut::new(self)
     }
 }
@@ -170,10 +170,10 @@ mod reg_u8_tests {
         let reg2 = RegU8::new(0x02);
         let reg3 = RegU8::new(0x03);
 
-        let iter0 = RegU8Iter::new(&reg0);
-        let iter1 = RegU8Iter::new(&reg1);
-        let iter2 = RegU8Iter::new(&reg2);
-        let iter3 = RegU8Iter::new(&reg3);
+        let iter0 = reg0.reg_iter();
+        let iter1 = reg1.reg_iter();
+        let iter2 = reg2.reg_iter();
+        let iter3 = reg3.reg_iter();
 
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         assert_eq!(Some(&0), iter.next());
@@ -190,10 +190,10 @@ mod reg_u8_tests {
         let mut reg2 = RegU8::new(0x02);
         let mut reg3 = RegU8::new(0x03);
 
-        let iter0 = RegU8Iter::new(&mut reg0);
-        let iter1 = RegU8Iter::new(&mut reg1);
-        let iter2 = RegU8Iter::new(&mut reg2);
-        let iter3 = RegU8Iter::new(&mut reg3);
+        let iter0 = reg0.reg_iter();
+        let iter1 = reg1.reg_iter();
+        let iter2 = reg2.reg_iter();
+        let iter3 = reg3.reg_iter();
 
         // check values equal initialization
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
@@ -204,10 +204,10 @@ mod reg_u8_tests {
         assert_eq!(None, iter.next());
 
         // Change values
-        let iter0 = RegU8IterMut::new(&mut reg0);
-        let iter1 = RegU8IterMut::new(&mut reg1);
-        let iter2 = RegU8IterMut::new(&mut reg2);
-        let iter3 = RegU8IterMut::new(&mut reg3);
+        let iter0 = reg0.reg_iter_mut();
+        let iter1 = reg1.reg_iter_mut();
+        let iter2 = reg2.reg_iter_mut();
+        let iter3 = reg3.reg_iter_mut();
         
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         if let Some(reff) = iter.next() {
@@ -227,10 +227,10 @@ mod reg_u8_tests {
         }
 
         // check for change
-        let iter0 = RegU8Iter::new(&mut reg0);
-        let iter1 = RegU8Iter::new(&mut reg1);
-        let iter2 = RegU8Iter::new(&mut reg2);
-        let iter3 = RegU8Iter::new(&mut reg3);
+        let iter0 = reg0.reg_iter();
+        let iter1 = reg1.reg_iter();
+        let iter2 = reg2.reg_iter();
+        let iter3 = reg3.reg_iter();
         
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         assert_eq!(Some(&42), iter.next());
