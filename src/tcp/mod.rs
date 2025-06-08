@@ -1,3 +1,10 @@
+mod frame;
+pub use frame::ModbusTcpFrame;
+
+mod decoder;
+
+
+
 pub struct ModbusApplicationProtocol {
     transaction_identifier: u16, 
     protocol_identifier: u16,
