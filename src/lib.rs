@@ -1,5 +1,9 @@
 #![no_std]
 
+#[cfg(test)]
+#[macro_use]
+extern crate std;
+
 // Register related types and helper functions.
 pub mod register;
 
