@@ -131,6 +131,7 @@ mod decode_tests {
                     println!("Protocol-Identifier={:04X}", frame.protocol_identifier());
                     println!("Length={}", frame.length());
                     println!("Unit-Identifier={}", frame.unit_identifier());
+                    println!("Is-Valid={}", frame.is_valid());
                 } 
             }
         }

@@ -33,7 +33,7 @@ impl<'a> ModbusTcpFrame<'a> {
 
     pub const fn is_valid(&self) -> bool {
         let length = 6 + self.length() as usize;
-        length == self.data.len()
+        length == self.data_length
     }
 }
 
