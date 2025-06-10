@@ -1,9 +1,12 @@
 
+use crate::tcp::frame::ValidModbusTcpFrame;
+
 use super::ModbusTcpFrame;
 
 pub enum ModbusTcpFrameDecoderError {
     InvalidProtocolIdentifier,
-    InvalidLength
+    InvalidLength,
+    Pending
 }
 
 enum ModbusTcpFrameDecoderState {
@@ -12,7 +15,6 @@ enum ModbusTcpFrameDecoderState {
         expected: usize,
         index: usize,
     },
-    Done,
     DecoderError { reason: ModbusTcpFrameDecoderError }
 }
 
@@ -30,7 +32,7 @@ impl ModbusTcpFrameDecoder {
         }
     }
 
-    pub fn push_data(&mut self, byte: u8) -> Option<ModbusTcpFrame<'_>>{
+    pub fn push_data(&mut self, byte: u8) -> Result<ModbusTcpFrame<'_>, ModbusTcpFrameDecoderError> {
         match &mut self.state {
             ModbusTcpFrameDecoderState::DecodeFrameHeader { index } => {
                 // push data
@@ -47,7 +49,7 @@ impl ModbusTcpFrameDecoder {
                     // check for correct protocol identifier
                     if protocol_identifier != 0 {
                         self.state = ModbusTcpFrameDecoderState::DecoderError { reason: ModbusTcpFrameDecoderError::InvalidProtocolIdentifier };
-                        return None;
+                        return Err(ModbusTcpFrameDecoderError::InvalidProtocolIdentifier);
                     }
 
                     // read length
@@ -57,7 +59,7 @@ impl ModbusTcpFrameDecoder {
                     // check for correct length
                     if length == 0 || length > 253 + 1 {
                         self.state = ModbusTcpFrameDecoderState::DecoderError { reason: ModbusTcpFrameDecoderError::InvalidLength };
-                        return None;
+                        return Err(ModbusTcpFrameDecoderError::InvalidLength);
                     }
 
                     self.state = ModbusTcpFrameDecoderState::DecodeFramePayload {
@@ -65,7 +67,7 @@ impl ModbusTcpFrameDecoder {
                         index: 0,
                     };
                 }
-                None
+                Err(ModbusTcpFrameDecoderError::Pending)
             },  
             ModbusTcpFrameDecoderState::DecodeFramePayload { expected, index } => {
                 // compute index 
@@ -81,19 +83,20 @@ impl ModbusTcpFrameDecoder {
                     // compute total length
                     let total_length = 7 + *expected;
 
-                    let result = unsafe {
-                        ModbusTcpFrame::new_unchecked(&mut self.data, total_length)
+                    let result = {
+                        let valid_frame = ValidModbusTcpFrame { data: &mut self.data, data_length: total_length};
+                        ModbusTcpFrame::new(valid_frame)
                     };
 
                     // set new state
-                    self.state = ModbusTcpFrameDecoderState::Done;
+                    self.state = ModbusTcpFrameDecoderState::DecodeFrameHeader { index: 0 };
 
                     // return 
-                    return Some(result);
+                    return Ok(result);
                 }
-                None
+                Err(ModbusTcpFrameDecoderError::Pending)
             },
-            _ => None
+            _ => Err(ModbusTcpFrameDecoderError::Pending)
         }
     }
 
@@ -106,34 +109,64 @@ impl ModbusTcpFrameDecoder {
 
 #[cfg(test)]
 mod decode_tests {    
+    use crate::{FunctionCode, FunctionKind};
     use super::*;
 
-
     #[test]
-    fn test_001() {
+    fn decode_frame_001() {
         let mut decoder = ModbusTcpFrameDecoder::new();
 
-        // Beispiel: eingelesene Modbus-Daten
+        // example frame data
         let received = [
-            0x00, 0x01,  // Transaction ID
-            0x00, 0x00,  // Protocol ID
-            0x00, 0x06,  // Length
-            0x11,        // Unit ID
-            0x03,        // Function code
-            0x00, 0x6B, 0x00, 0x03u8, // Data
+            0x00, 0x01,             // Transaction ID
+            0x00, 0x00,             // Protocol ID
+            0x00, 0x06,             // Length
+            0x11,                   // Unit ID
+            0x03,                   // Function code
+            0x012, 0x6B, 0x00, 0x03, // Data
         ];
 
-        {
-            // Parsing ohne Kopie, mutable Zugriff auf Daten
-            for byte in received {
-                if let Some(frame) = decoder.push_data(byte) {
-                    println!("Transaction-Identifier={:04X}", frame.transaction_identifier());
-                    println!("Protocol-Identifier={:04X}", frame.protocol_identifier());
-                    println!("Length={}", frame.length());
-                    println!("Unit-Identifier={}", frame.unit_identifier());
-                    println!("Is-Valid={}", frame.is_valid());
-                } 
-            }
+        // parsing without copy, mutable access to data
+        for byte in received {
+            match decoder.push_data(byte) {
+                Ok(frame) => {
+                    assert_eq!(frame.transaction_identifier(), 0x0001);
+                    assert_eq!(frame.protocol_identifier(), 0x0000);
+                    assert_eq!(frame.length(), 0x0006);
+                    assert_eq!(frame.unit_identifier(), 0x11);
+                }, 
+                Err(ModbusTcpFrameDecoderError::Pending) => assert!(true),
+                _ => assert!(false)
+            } 
+        }
+    }
+
+    #[test]
+    fn decode_frame_002() {
+        let mut decoder = ModbusTcpFrameDecoder::new();
+
+        // example frame data
+        let received = [
+            0x00, 0x01, // Transaction ID
+            0x00, 0x00, // Protocol ID
+            0x00, 0x03, // Length
+            0x11,       // Unit ID
+            0x83,       // Function code (exception)
+            0x01,       // Exception code
+        ];
+
+        // parsing without copy, mutable access to data
+        for byte in received {
+            match decoder.push_data(byte) {
+                Ok(frame) => {
+                    assert_eq!(frame.transaction_identifier(), 0x0001);
+                    assert_eq!(frame.protocol_identifier(), 0x0000);
+                    assert_eq!(frame.length(), 0x0003);
+                    assert_eq!(frame.unit_identifier(), 0x11);
+                }, 
+                Err(ModbusTcpFrameDecoderError::Pending) => assert!(true),
+                _ => assert!(false)
+            } 
         }
     }
 }
