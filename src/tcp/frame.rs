@@ -8,8 +8,8 @@ pub(crate) struct ValidModbusTcpFrame<'a> {
 }
 
 pub struct ModbusTcpFrame<'a> {
-    data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
-    data_length: usize
+    pub(crate) data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
+    pub(crate) data_length: usize
 }
 
 impl<'a> ModbusTcpFrame<'a> {
