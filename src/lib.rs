@@ -4,8 +4,11 @@
 #[macro_use]
 extern crate std;
 
-// Register related types and helper functions.
+/// Register related types and helper functions.
 pub mod register;
 
-// TCP/IP related types and helper functions.
+/// Exception code related types and helper functions.
+pub mod exception;
+
+/// TCP/IP related types and helper functions.
 pub mod tcp;
