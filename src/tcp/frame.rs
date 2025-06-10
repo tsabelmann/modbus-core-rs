@@ -1,6 +1,11 @@
+use crate::{FunctionKind, PduData, PduDataMut};
+
 pub const MODBUS_FRAME_DATA_LENTGH: usize = 260;
 
-
+pub(crate) struct ValidModbusTcpFrame<'a> {
+    pub data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
+    pub data_length: usize
+}
 
 pub struct ModbusTcpFrame<'a> {
     data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
@@ -8,9 +13,11 @@ pub struct ModbusTcpFrame<'a> {
 }
 
 impl<'a> ModbusTcpFrame<'a> {
-    pub unsafe fn new_unchecked(data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH], data_length: usize) -> ModbusTcpFrame<'a> {
-        ModbusTcpFrame { data, data_length:  data_length.min(MODBUS_FRAME_DATA_LENTGH) }
+    pub(crate) const fn new(frame: ValidModbusTcpFrame<'a>) -> ModbusTcpFrame<'a> {
+        ModbusTcpFrame { data: frame.data, data_length: frame.data_length }
     }
+
+    // pub const fn new_unchecked()
 
     pub const fn transaction_identifier(&self) -> u16 {
         let data = [self.data[0], self.data[1]];
@@ -30,10 +37,25 @@ impl<'a> ModbusTcpFrame<'a> {
     pub const fn unit_identifier(&self) -> u8 {
         self.data[6]
     }
+}
 
-    pub const fn is_valid(&self) -> bool {
-        let length = 6 + self.length() as usize;
-        length == self.data_length
+impl<'a> PduData for ModbusTcpFrame<'a> {
+    fn pdu_data(&self) -> & [u8] {
+        &self.data[7..self.data_length]
+    }
+
+    fn function_code(&self) -> FunctionKind {
+        FunctionKind::from(self.data[7])
+    }
+}
+
+impl<'a> PduDataMut for ModbusTcpFrame<'a> {
+    fn pdu_data_mut(&mut self) -> &mut [u8] {
+        &mut self.data[7..]
+    }
+
+    fn set_function_code(&mut self, code: FunctionKind) {
+        self.data[7] = u8::from(code);
     }
 }
 
