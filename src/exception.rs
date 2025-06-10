@@ -1,4 +1,5 @@
 
+#[non_exhaustive]
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExceptionCode {
@@ -36,7 +37,7 @@ pub enum ExceptionCode {
 
     /// An unrecoverable error occurred while the server was attempting 
     /// to perform the requested action.
-    SlaveDeviceFailure = 0x04,
+    ServerDeviceFailure = 0x04,
 
     /// Specialized use in conjunction with programming commands.
     /// The server has accepted the request and is processing it, but 
@@ -49,7 +50,7 @@ pub enum ExceptionCode {
     /// Specialized use in conjunction with programming commands.
     /// The server is engaged in processing a long–duration program command. 
     /// The client should retransmit the message later when the server is free.
-    SlaveDeviceBusy = 0x06,
+    ServerDeviceBusy = 0x06,
 
     /// Specialized use in conjunction with function codes 20 and 21 and reference type 6, to 
     /// indicate that the extended file area failed to pass a consistency check.
@@ -78,9 +79,9 @@ impl From<ExceptionCode> for u8 {
             ExceptionCode::IllegalFunction => 0x01,
             ExceptionCode::IllegalDataAddress => 0x02,
             ExceptionCode::IllegalDataValue => 0x03,
-            ExceptionCode::SlaveDeviceFailure => 0x04,
+            ExceptionCode::ServerDeviceFailure => 0x04,
             ExceptionCode::Acknowledge => 0x05,
-            ExceptionCode::SlaveDeviceBusy => 0x06,
+            ExceptionCode::ServerDeviceBusy => 0x06,
             ExceptionCode::MemoryParityError => 0x08,
             ExceptionCode::GatewayPathUnavailable => 0x0A,
             ExceptionCode::GatewayTargetFailedToRespond => 0x0B,
@@ -95,9 +96,9 @@ impl From<u8> for ExceptionCode {
             0x01 => ExceptionCode::IllegalFunction,
             0x02 => ExceptionCode::IllegalDataAddress,
             0x03 => ExceptionCode::IllegalDataValue,
-            0x04 => ExceptionCode::SlaveDeviceFailure,
+            0x04 => ExceptionCode::ServerDeviceFailure,
             0x05 => ExceptionCode::Acknowledge,
-            0x06 => ExceptionCode::SlaveDeviceBusy,
+            0x06 => ExceptionCode::ServerDeviceBusy,
             0x08 => ExceptionCode::MemoryParityError,
             0x0A => ExceptionCode::GatewayPathUnavailable,
             0x0B => ExceptionCode::GatewayTargetFailedToRespond,
@@ -136,7 +137,7 @@ mod exeception_tests {
 
     #[test]
     fn test_from_004() {
-        let exception = ExceptionCode::SlaveDeviceFailure;
+        let exception = ExceptionCode::ServerDeviceFailure;
         let value = u8::from(exception);
         let new_exception = ExceptionCode::from(value);
         assert_eq!(exception, new_exception);
@@ -152,7 +153,7 @@ mod exeception_tests {
 
     #[test]
     fn test_from_006() {
-        let exception = ExceptionCode::SlaveDeviceBusy;
+        let exception = ExceptionCode::ServerDeviceBusy;
         let value = u8::from(exception);
         let new_exception = ExceptionCode::from(value);
         assert_eq!(exception, new_exception);
