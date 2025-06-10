@@ -1,2 +1,2 @@
-mod read_holding_register;
-pub use read_holding_register::ReadHoldingRegistersResponseBuilder;
+mod read_holding_registers;
+pub use read_holding_registers::ReadHoldingRegistersResponseBuilder;
