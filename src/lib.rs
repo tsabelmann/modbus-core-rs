@@ -8,7 +8,8 @@ extern crate std;
 pub mod register;
 
 /// Exception code related types and helper functions.
-pub mod exception;
+mod exception;
+pub use exception::ExceptionCode;
 
 /// TCP/IP related types and helper functions.
 pub mod tcp;
