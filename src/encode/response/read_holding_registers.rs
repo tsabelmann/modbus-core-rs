@@ -1,5 +1,21 @@
 use crate::{ExceptionCode, FunctionKind, FunctionCode, PduDataMut};
 
+pub(crate) trait IntoU16 {
+    fn into_u16(self) -> u16;
+}
+
+impl IntoU16 for u16 {
+    fn into_u16(self) -> u16 {
+        self   
+    }
+}
+
+impl<'a> IntoU16 for &'a u16 {
+    fn into_u16(self) -> u16 {
+        *self
+    }
+}
+
 #[repr(u8)]
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -18,12 +34,12 @@ pub enum ReadHoldingRegistersReponseEncodeExceptionError {
 }
 
 pub trait ReadHoldingRegistersReponseEncoder {
-    fn encode<I: Iterator<Item=u16>>(&mut self, quantity_of_registers: u16, iterator: I) -> Result<(), ReadHoldingRegistersReponseEncodeError>; 
+    fn encode<U: IntoU16, I: Iterator<Item=U>>(&mut self, quantity_of_registers: u16, iterator: I) -> Result<(), ReadHoldingRegistersReponseEncodeError>; 
     fn encode_exception(&mut self, code: ExceptionCode) -> Result<(), ReadHoldingRegistersReponseEncodeExceptionError>;
 }
 
 impl<T: PduDataMut> ReadHoldingRegistersReponseEncoder for T {
-    fn encode<I: Iterator<Item=u16>>(&mut self, quantity_of_registers: u16, iterator: I) -> Result<(), ReadHoldingRegistersReponseEncodeError> {
+    fn encode<U: IntoU16, I: Iterator<Item=U>>(&mut self, quantity_of_registers: u16, iterator: I) -> Result<(), ReadHoldingRegistersReponseEncodeError> {
         // check for quantity of registers
         if quantity_of_registers > 125 || quantity_of_registers == 0 {
             return Err(ReadHoldingRegistersReponseEncodeError::InvalidQuantityOfRegisters);
@@ -51,6 +67,7 @@ impl<T: PduDataMut> ReadHoldingRegistersReponseEncoder for T {
             reg_index = index;
 
             // deserialize u16 register data 
+            let reg_value = reg_value.into_u16();
             let data = reg_value.to_be_bytes();
 
             // write MSB
