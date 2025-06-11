@@ -109,7 +109,6 @@ impl ModbusTcpFrameDecoder {
 
 #[cfg(test)]
 mod decode_tests {    
-    use crate::{FunctionCode, FunctionKind};
     use super::*;
 
     #[test]
