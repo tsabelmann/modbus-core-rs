@@ -1,6 +1,7 @@
 use std::{io::{Read, Write}, net::TcpListener};
-use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::{response::ReadHoldingRegistersReponseEncoder}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
+use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::response::{ReadHoldingRegistersReponseEncoder, WriteSingleRegisterReponseEncoder}, register::{IntoRegIter, RegU32}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
 use modbus_stack::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
+use modbus_stack::register::RO;
 
 // fn handle_client(mut stream: TcpStream) {
 //     let mut buffer = [0u8; 1024];
@@ -11,6 +12,8 @@ use modbus_stack::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 //         }
 //     }
 // }
+
+pub const REGISTER: RO::<RegU32> = RO::<RegU32>::new(RegU32::new(0x53_75_6E_53));  
 
 fn main() -> std::io::Result<()> {
     let mut buffer = [0u8; MODBUS_TCP_FRAME_DATA_LENTGH];
@@ -64,13 +67,9 @@ fn main() -> std::io::Result<()> {
                             };
                             frame.copy_to(&mut out_frame);
                             
-                            let string = "SunS";
-                            let bytes = string.as_bytes();
-                            let upper = u16::from_be_bytes([bytes[0], bytes[1]]);
-                            let lower = u16::from_be_bytes([bytes[2], bytes[3]]);
-
                             let quantity_of_registers = read_holding_register_request.quantity_of_registers();
-                            match ReadHoldingRegistersReponseEncoder::encode(&mut out_frame, quantity_of_registers, [upper, lower].into_iter()) {
+                            let iter = REGISTER.into_reg_iter();                            
+                            match ReadHoldingRegistersReponseEncoder::encode(&mut out_frame, quantity_of_registers, iter) {
                                 Ok(_) => {
                                     println!("Success!");
                                     let length = (out_frame.length() + 6) as usize;
@@ -93,11 +92,28 @@ fn main() -> std::io::Result<()> {
                             // };
 
                         }
-                        // if let Ok(write_single_request) = WriteSingleRegisterRequest::new(&frame) {
-                        //     println!("Write-Single-Register");
-                        //     println!("Register-Address: {:04X}", write_single_request.register_address());
-                        //     println!("Register-Value: {:04X}", write_single_request.register_value());
-                        // }
+
+                        if let Ok(request) = WriteSingleRegisterRequestDecoder::new(&frame) {
+                            println!("Write-Single-Register");
+                            println!("Register-Address: {:04X}", request.register_address());
+                            println!("Register-Value: {:04X}", request.register_value());
+
+                            let mut out_frame = unsafe {
+                                ModbusTcpFrame::new_unchecked(&mut out_buffer)
+                            };
+                            frame.copy_to(&mut out_frame);
+
+                            match WriteSingleRegisterReponseEncoder::encode(&mut out_frame, request.register_address(), request.register_value()) {
+                                Ok(_) => {
+                                    println!("Success!");
+                                    let length = (out_frame.length() + 6) as usize;
+                                    let result = stream.write(&out_buffer[..length]);
+                                    println!("Written-Data: {:?}", result);
+                                    println!("Bytes: {:?}", &out_buffer[..length]);
+                                },
+                                Err(reason) => println!("Not a success - Why? {:?}", reason)
+                            };
+                        }
                     }
                 }
             },
