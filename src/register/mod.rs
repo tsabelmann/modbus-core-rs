@@ -78,7 +78,6 @@ impl<T: IntoRegIter> IntoRegIter for RO<T> {
     }
 }
 
-
 /// Read and writable register.
 pub struct RW<T>
 where 
