@@ -1,14 +1,13 @@
 use crate::{FunctionKind, PduData, PduDataMut};
-
-pub const MODBUS_FRAME_DATA_LENTGH: usize = 260;
+use crate::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 
 pub(crate) struct ValidModbusTcpFrame<'a> {
-    pub data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
+    pub data: &'a mut [u8; MODBUS_TCP_FRAME_DATA_LENTGH],
     pub data_length: usize
 }
 
 pub struct ModbusTcpFrame<'a> {
-    data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
+    data: &'a mut [u8; MODBUS_TCP_FRAME_DATA_LENTGH],
     data_length: usize
 }
 
@@ -17,8 +16,8 @@ impl<'a> ModbusTcpFrame<'a> {
         ModbusTcpFrame { data: frame.data, data_length: frame.data_length }
     }
 
-    pub const unsafe fn new_unchecked(data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH]) -> ModbusTcpFrame<'a> {
-        ModbusTcpFrame { data, data_length: MODBUS_FRAME_DATA_LENTGH  }
+    pub const unsafe fn new_unchecked(data: &'a mut [u8; MODBUS_TCP_FRAME_DATA_LENTGH]) -> ModbusTcpFrame<'a> {
+        ModbusTcpFrame { data, data_length: MODBUS_TCP_FRAME_DATA_LENTGH }
     }
 
     pub const fn transaction_identifier(&self) -> u16 {
