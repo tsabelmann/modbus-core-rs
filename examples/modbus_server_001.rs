@@ -1,6 +1,6 @@
 use std::{io::{Read, Write}, net::TcpListener};
 use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::{response::ReadHoldingRegistersReponseEncoder}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
-
+use modbus_stack::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 
 // fn handle_client(mut stream: TcpStream) {
 //     let mut buffer = [0u8; 1024];
@@ -13,8 +13,8 @@ use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMu
 // }
 
 fn main() -> std::io::Result<()> {
-    let mut buffer = [0u8; 260];
-    let mut out_buffer = [0u8; 260];
+    let mut buffer = [0u8; MODBUS_TCP_FRAME_DATA_LENTGH];
+    let mut out_buffer = [0u8; MODBUS_TCP_FRAME_DATA_LENTGH];
     let mut decoder = ModbusTcpFrameDecoder::new();
 
 
