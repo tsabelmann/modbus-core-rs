@@ -49,7 +49,6 @@ pub trait IntoRegIterMut {
     fn into_reg_iter_mut(&mut self) -> Self::IntoIterMut<'_>;
 }
 
-
 /// Read-only register enforced by the type system.
 pub struct RO<T>
 where 
