@@ -4,6 +4,10 @@
 #[macro_use]
 extern crate std;
 
+pub mod decode;
+
+pub mod encode;
+
 /// Register related types and helper functions.
 pub mod register;
 
@@ -21,6 +25,3 @@ pub use pdu::{PduData, PduDataMut};
 
 /// TCP/IP related types and helper functions.
 pub mod tcp;
-
-/// Server related types and helper functions.
-pub mod server;
