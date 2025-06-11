@@ -8,8 +8,8 @@ pub(crate) struct ValidModbusTcpFrame<'a> {
 }
 
 pub struct ModbusTcpFrame<'a> {
-    pub(crate) data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
-    pub(crate) data_length: usize
+    data: &'a mut [u8; MODBUS_FRAME_DATA_LENTGH],
+    data_length: usize
 }
 
 impl<'a> ModbusTcpFrame<'a> {
@@ -73,6 +73,10 @@ impl<'a> PduData for ModbusTcpFrame<'a> {
     fn function_code(&self) -> FunctionKind {
         FunctionKind::from(self.data[7])
     }
+
+    fn length(&self) -> Option<u16> {
+        Some(self.length())
+    }
 }
 
 impl<'a> PduDataMut for ModbusTcpFrame<'a> {
@@ -82,6 +86,18 @@ impl<'a> PduDataMut for ModbusTcpFrame<'a> {
 
     fn set_function_code(&mut self, code: FunctionKind) {
         self.data[7] = u8::from(code);
+    }
+
+    fn set_length(&mut self, length: u16) {
+        if length <= 254 {
+            // write length field
+            let data = length.to_be_bytes();
+            self.data[4] = data[0];
+            self.data[5] = data[1];
+            
+            // set internal array length
+            self.data_length = (6 + length) as usize;
+        }
     }
 }
 
