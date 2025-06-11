@@ -1,5 +1,5 @@
 use std::{io::{Read, Write}, net::TcpListener};
-use modbus_stack::{server::{request::{ReadHoldingRegistersRequest, WriteSingleRegisterRequest}, response::ReadHoldingRegistersResponseBuilder}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, PduData, PduDataMut};
+use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::{response::ReadHoldingRegistersReponseEncoder, ReadHoldingRegistersEnconder}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
 
 
 // fn handle_client(mut stream: TcpStream) {
@@ -41,7 +41,21 @@ fn main() -> std::io::Result<()> {
                         println!("Unit-Identifier: {}", frame.unit_identifier());
                         println!("Function-Code: {:?}", frame.function_code());
 
-                        if let Ok(read_holding_register_request) = ReadHoldingRegistersRequest::new(&frame) {
+                        // match WriteMultipleRegistersRequestDecoder::new(&frame) {
+                        //     Ok(write_multiple_registers_request) => {
+                        //         println!("Write-Multiple-Registers");
+                        //         println!("Starting-Address: {:04X}", write_multiple_registers_request.starting_address());
+                        //         println!("Quantity-Of-Register: {}", write_multiple_registers_request.quantity_of_registers());
+
+                        //         for value in write_multiple_registers_request {
+                        //             println!("Register={:04X}", value);
+                        //         }
+                        //     },
+                        //     Err(reason) => println!("Not a success - Why? {:?}", reason)
+                        // };
+
+
+                        if let Ok(read_holding_register_request) = ReadHoldingRegistersRequestDecoder::new(&frame) {
                             println!("Starting-Address: {:04X}", read_holding_register_request.starting_address());
                             println!("Quantity-Of-Register: {}", read_holding_register_request.quantity_of_registers());
 
@@ -50,27 +64,40 @@ fn main() -> std::io::Result<()> {
                             };
                             frame.copy_to(&mut out_frame);
                             
-                            let range= (0..0xFFFFu16).into_iter();
-                            let mut builder = ReadHoldingRegistersResponseBuilder::new(&mut out_frame, range, read_holding_register_request.quantity_of_registers());
-                            if let Ok(written_size) = builder.encode() {
-                                println!("Writte-Size: {}", written_size);
-                                
-                                out_frame.set_length(written_size + 1);
+                            let string = "SunS";
+                            let bytes = string.as_bytes();
+                            let upper = u16::from_be_bytes([bytes[0], bytes[1]]);
+                            let lower = u16::from_be_bytes([bytes[2], bytes[3]]);
 
-                                let length = (6 + out_frame.length())as usize;
+                            let quantity_of_registers = read_holding_register_request.quantity_of_registers();
+                            match ReadHoldingRegistersReponseEncoder::encode(&mut out_frame, quantity_of_registers, [upper, lower].into_iter()) {
+                                Ok(_) => {
+                                    println!("Success!");
+                                    let length = (out_frame.length() + 6) as usize;
+                                    let result = stream.write(&out_buffer[..length]);
+                                    println!("Written-Data: {:?}", result);
+                                    println!("Bytes: {:?}", &out_buffer[..length]);
+                                },
+                                Err(reason) => println!("Not a success - Why? {:?}", reason)
+                            };
 
+                            // match ReadHoldingRegistersReponseEncoder::encode_exception(&mut out_frame, ExceptionCode::IllegalDataAddress) {
+                            //     Ok(_) => {
+                            //         println!("Success!");
+                            //         let length = (out_frame.length() + 6) as usize;
+                            //         let result = stream.write(&out_buffer[..length]);
+                            //         println!("Written-Data: {:?}", result);
+                            //         println!("Bytes: {:?}", &out_buffer[..length]);
+                            //     },
+                            //     Err(reason) => println!("Not a success - Why? {:?}", reason)
+                            // };
 
-                                println!("out_buffer[..length] = {:?}", &out_buffer[..length]);
-
-                                let result = stream.write(&out_buffer[..length]);
-                                println!("Written-Data: {:?}", result);
-                            }
                         }
-
-                        if let Ok(write_single_request) = WriteSingleRegisterRequest::new(&frame) {
-                            println!("Register-Address: {:04X}", write_single_request.register_address());
-                            println!("Register-Value: {:04X}", write_single_request.register_value());
-                        }
+                        // if let Ok(write_single_request) = WriteSingleRegisterRequest::new(&frame) {
+                        //     println!("Write-Single-Register");
+                        //     println!("Register-Address: {:04X}", write_single_request.register_address());
+                        //     println!("Register-Value: {:04X}", write_single_request.register_value());
+                        // }
                     }
                 }
             },
