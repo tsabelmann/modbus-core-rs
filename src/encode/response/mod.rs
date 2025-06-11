@@ -4,3 +4,4 @@ pub use read_holding_registers::{ReadHoldingRegistersReponseEncoder, ReadHolding
 mod write_multiple_registers;
 
 mod write_single_register;
+pub use write_single_register::{WriteSingleRegisterReponseEncoder, WriteSingleRegisterReponseEncodeError, WriteSingleRegisterReponseEncodeExceptionError};
