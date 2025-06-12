@@ -49,6 +49,17 @@ pub trait IntoRegIterMut {
     fn into_reg_iter_mut(&mut self) -> Self::IntoIterMut<'_>;
 }
 
+
+/// Trait for setting internal registers based on the provided value of type T
+pub trait SetRegisterValue<T> {
+    fn set_value(&mut self, value: T);
+}
+
+/// Trait for getting the value of type T from the internal registers
+pub trait GetRegisterValue<T> {
+    fn get_value(&self) -> T;
+}
+
 /// Read-only register enforced by the type system.
 pub struct RO<T>
 where 
