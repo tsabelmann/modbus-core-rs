@@ -106,18 +106,18 @@ fn main() -> std::io::Result<()> {
                         println!("Unit-Identifier: {}", frame.unit_identifier());
                         println!("Function-Code: {:?}", frame.function_code());
 
-                        // match WriteMultipleRegistersRequestDecoder::new(&frame) {
-                        //     Ok(write_multiple_registers_request) => {
-                        //         println!("Write-Multiple-Registers");
-                        //         println!("Starting-Address: {:04X}", write_multiple_registers_request.starting_address());
-                        //         println!("Quantity-Of-Register: {}", write_multiple_registers_request.quantity_of_registers());
+                        match WriteMultipleRegistersRequestDecoder::new(&frame) {
+                            Ok(write_multiple_registers_request) => {
+                                println!("Write-Multiple-Registers");
+                                println!("Starting-Address: {:04X}", write_multiple_registers_request.starting_address());
+                                println!("Quantity-Of-Register: {}", write_multiple_registers_request.quantity_of_registers());
 
-                        //         for value in write_multiple_registers_request {
-                        //             println!("Register={:04X}", value);
-                        //         }
-                        //     },
-                        //     Err(reason) => println!("Not a success - Why? {:?}", reason)
-                        // };
+                                for value in write_multiple_registers_request {
+                                    println!("Register={:04X}", value);
+                                }
+                            },
+                            Err(reason) => println!("<Write-Multiple-Registers> Not a success - Why? {:?}", reason)
+                        };
 
 
                         if let Ok(req) = ReadHoldingRegistersRequestDecoder::new(&frame) {
@@ -141,7 +141,7 @@ fn main() -> std::io::Result<()> {
                                         println!("Written-Data: {:?}", result);
                                         println!("Bytes: {:?}", &out_buffer[..length]);
                                     },
-                                    Err(reason) => println!("Not a success - Why? {:?}", reason)
+                                    Err(reason) => println!("<Write-Multiple-Registers> Not a success - Why? {:?}", reason)
                                 };
                             } else {
                                 match ReadHoldingRegistersReponseEncoder::encode_exception(&mut out_frame, ExceptionCode::IllegalDataAddress) {
@@ -186,7 +186,7 @@ fn main() -> std::io::Result<()> {
                                     println!("Written-Data: {:?}", result);
                                     println!("Bytes: {:?}", &out_buffer[..length]);
                                 },
-                                Err(reason) => println!("Not a success - Why? {:?}", reason)
+                                Err(reason) => println!("<Write-Single-Register> Not a success - Why? {:?}", reason)
                             };
                         }
                     }
