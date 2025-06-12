@@ -35,6 +35,11 @@ pub use reg_f32::{RegF32, RegF32Iter, RegF32IterMut};
 mod reg_f64;
 pub use reg_f64::{RegF64, RegF64Iter, RegF64IterMut};
 
+// Array
+
+mod reg_u16_array;
+pub use reg_u16_array::{RegU16Array, RegU16ArrayIter, RegU16ArrayIterMut};
+
 /// Trait for creating an immutable register iterator. See [IntoRegIterMut] for mutable register iterator.
 pub trait IntoRegIter {
     type IntoIter<'a>: Iterator<Item = &'a u16> where Self: 'a;
