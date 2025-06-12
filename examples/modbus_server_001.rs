@@ -168,27 +168,27 @@ fn main() -> std::io::Result<()> {
                             // };
                         }
 
-                        // if let Ok(request) = WriteSingleRegisterRequestDecoder::new(&frame) {
-                        //     println!("Write-Single-Register");
-                        //     println!("Register-Address: {:04X}", request.register_address());
-                        //     println!("Register-Value: {:04X}", request.register_value());
+                        if let Ok(request) = WriteSingleRegisterRequestDecoder::new(&frame) {
+                            println!("Write-Single-Register");
+                            println!("Register-Address: {:04X}", request.register_address());
+                            println!("Register-Value: {:04X}", request.register_value());
 
-                        //     let mut out_frame = unsafe {
-                        //         ModbusTcpFrame::new_unchecked(&mut out_buffer)
-                        //     };
-                        //     frame.copy_to(&mut out_frame);
+                            let mut out_frame = unsafe {
+                                ModbusTcpFrame::new_unchecked(&mut out_buffer)
+                            };
+                            frame.copy_to(&mut out_frame);
 
-                        //     match WriteSingleRegisterReponseEncoder::encode(&mut out_frame, request.register_address(), request.register_value()) {
-                        //         Ok(_) => {
-                        //             println!("Success!");
-                        //             let length = (out_frame.length() + 6) as usize;
-                        //             let result = stream.write(&out_buffer[..length]);
-                        //             println!("Written-Data: {:?}", result);
-                        //             println!("Bytes: {:?}", &out_buffer[..length]);
-                        //         },
-                        //         Err(reason) => println!("Not a success - Why? {:?}", reason)
-                        //     };
-                        // }
+                            match WriteSingleRegisterReponseEncoder::encode(&mut out_frame, request.register_address(), request.register_value()) {
+                                Ok(_) => {
+                                    println!("Success!");
+                                    let length = (out_frame.length() + 6) as usize;
+                                    let result = stream.write(&out_buffer[..length]);
+                                    println!("Written-Data: {:?}", result);
+                                    println!("Bytes: {:?}", &out_buffer[..length]);
+                                },
+                                Err(reason) => println!("Not a success - Why? {:?}", reason)
+                            };
+                        }
                     }
                 }
             },
