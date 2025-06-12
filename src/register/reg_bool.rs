@@ -1,3 +1,5 @@
+use crate::register::{SetRegisterValue, GetRegisterValue};
+
 use super::{IntoRegIter, IntoRegIterMut};
 
 
@@ -86,6 +88,18 @@ impl From<&RegBool> for bool {
             0x0000 => false,
             _ => true
         }
+    }
+}
+
+impl SetRegisterValue<bool> for RegBool {
+    fn set_value(&mut self, value: bool) {
+        *self = RegBool::from(value);
+    }
+}
+
+impl GetRegisterValue<bool> for RegBool {
+    fn get_value(&self) -> bool {
+        bool::from(self)
     }
 }
 
