@@ -1,5 +1,5 @@
 use std::{io::{Read, Write}, net::TcpListener};
-use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::response::{ReadHoldingRegistersReponseEncoder, WriteSingleRegisterReponseEncoder}, register::{IntoRegIter, RegU16, RegU32, RegU64}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
+use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::response::{ReadHoldingRegistersReponseEncoder, WriteSingleRegisterReponseEncoder}, register::{IntoRegIter, RegU16, RegU16Array, RegU32, RegU64}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
 use modbus_stack::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 use modbus_stack::register::RO;
 
@@ -14,27 +14,51 @@ use modbus_stack::register::RO;
 // }
 
 pub const SUN_S: RO::<RegU32> = RO::<RegU32>::new(RegU32::new(0x53_75_6E_53));  
-pub const MODELS: [RegU64; 2048] = [const { RegU64::new(0x0000) }; 2048];
+pub const MODEL_1_ID: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(1));
+pub const MODEL_1_LENGTH: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(68));
+pub const MODEL_1_MANUFACTURER: RO::<RegU16Array<16>> = RO::<RegU16Array<16>>::new(RegU16Array::from_str("NAEXT GmbH"));
+pub const MODEL_1_MODEL: RO::<RegU16Array<16>> = RO::<RegU16Array<16>>::new(RegU16Array::from_str("MultiBMS"));
+pub const MODEL_1_OPTIONS: RO::<RegU16Array<8>> = RO::<RegU16Array<8>>::new(RegU16Array::from_str("NOT"));
+pub const MODEL_1_VERSION: RO::<RegU16Array<8>> = RO::<RegU16Array<8>>::new(RegU16Array::from_str("0.1.0-test"));
+pub const MODEL_1_SERIAL: RO::<RegU16Array<16>> = RO::<RegU16Array<16>>::new(RegU16Array::from_str("SunSpec funktioniert!"));
+pub const MODEL_1_DEVICE_ADDRESS: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(0));
+pub const MODEL_1_PAD: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(0));
+
 pub const MODEL_END: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(0xFFFF));
 pub const END: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(0));
 
 pub fn dispatch(starting_address: u16, quantity_of_registers: u16) -> Option<impl Iterator<Item = &'static u16>> {
-    if starting_address < 40000 || starting_address > 40003 {
+    if starting_address < 40000 || starting_address > 40074 {
         return None;
     }
 
     let diff = starting_address - 40000;
-    if diff + quantity_of_registers > 4 {
+    if diff + quantity_of_registers > 74 {
         return None;
     }
 
     // Beginne mit dem ersten Iterator
     let iter = SUN_S.reg_iter();
 
-    // // Hänge alle MODELS-Iteratoren an
-    // let iters = (&MODELS).iter().map(|reg| reg.reg_iter());
-    // let array_iter = iters.into_iter().flatten();
-    // let iter = iter.chain(array_iter);
+    let model_1_id_iter = MODEL_1_ID.reg_iter();
+    let model_1_length_iter = MODEL_1_LENGTH.reg_iter();
+    let model_1_manufacturer_iter = MODEL_1_MANUFACTURER.reg_iter();
+    let model_1_model_iter = MODEL_1_MODEL.reg_iter();
+    let model_1_options_iter = MODEL_1_OPTIONS.reg_iter();
+    let model_1_version_iter = MODEL_1_VERSION.reg_iter();
+    let model_1_serial_iter = MODEL_1_SERIAL.reg_iter();
+    let model_1_device_address_iter = MODEL_1_DEVICE_ADDRESS.reg_iter();
+    let model_1_pad_iter = MODEL_1_PAD.reg_iter();
+    let iter = iter
+        .chain(model_1_id_iter)
+        .chain(model_1_length_iter)
+        .chain(model_1_manufacturer_iter)
+        .chain(model_1_model_iter)
+        .chain(model_1_options_iter)
+        .chain(model_1_version_iter)
+        .chain(model_1_serial_iter)
+        .chain(model_1_device_address_iter)
+        .chain(model_1_pad_iter);
 
     // Hänge den letzten an
     let iter = iter.chain(MODEL_END.reg_iter()).chain(END.reg_iter());
