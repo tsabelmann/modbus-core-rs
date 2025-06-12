@@ -117,7 +117,7 @@ impl From<FunctionKind> for u8 {
         match value {
             FunctionKind::Normal(code) => {
                 let value = u8::from(code);
-                value
+                value & 0x7F
             },
             FunctionKind::Exception(code) => {
                 let value = u8::from(code);
