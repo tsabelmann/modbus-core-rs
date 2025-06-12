@@ -1,6 +1,8 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FunctionKind {
+    /// "Function Code" for encoding valid requests and responses.
     Normal(FunctionCode),
+    /// "Function Code" for encoding responses to invalid requests.
     Exception(FunctionCode),
 }
 
