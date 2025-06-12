@@ -1,4 +1,4 @@
-use super::{IntoRegIter, IntoRegIterMut};
+use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
 
 /// Modbus register that can be converter to and from [u64].
 pub struct RegU64 {
@@ -85,6 +85,18 @@ impl From<&RegU64> for u64 {
     fn from(value: &RegU64) -> Self {
         let result = ((value.data[0] as u64) << 48) | ((value.data[1] as u64) << 32) | ((value.data[2] as u64) << 16) | (value.data[3] as u64);
         result
+    }
+}
+
+impl SetRegisterValue<u64> for RegU64 {
+    fn set_value(&mut self, value: u64) {
+        *self = RegU64::from(value);
+    }
+}
+
+impl GetRegisterValue<u64> for RegU64 {
+    fn get_value(&self) -> u64 {
+        u64::from(self)
     }
 }
 
