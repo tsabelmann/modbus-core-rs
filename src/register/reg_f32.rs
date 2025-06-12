@@ -1,4 +1,4 @@
-use super::{IntoRegIter, IntoRegIterMut};
+use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
 
 /// Modbus register that can be converter to and from [f32].
 pub struct RegF32 {
@@ -88,6 +88,18 @@ impl From<&RegF32> for f32 {
         data[2] = ((value.data[1] >> 8) & 0xFF) as u8;
         data[3] = (value.data[1] & 0xFF) as u8;
         f32::from_be_bytes(data)
+    }
+}
+
+impl SetRegisterValue<f32> for RegF32 {
+    fn set_value(&mut self, value: f32) {
+        *self = RegF32::from(value);
+    }
+}
+
+impl GetRegisterValue<f32> for RegF32 {
+    fn get_value(&self) -> f32 {
+        f32::from(self)
     }
 }
 

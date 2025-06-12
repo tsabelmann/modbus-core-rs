@@ -1,4 +1,4 @@
-use super::{IntoRegIter, IntoRegIterMut};
+use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
 
 /// Modbus register that can be converter to and from [f64].
 pub struct RegF64 {
@@ -94,6 +94,18 @@ impl From<&RegF64> for f64 {
         data[6] = ((value.data[3] >> 8) & 0xFF) as u8;
         data[7] = (value.data[3] & 0xFF) as u8;
         f64::from_be_bytes(data)
+    }
+}
+
+impl SetRegisterValue<f64> for RegF64 {
+    fn set_value(&mut self, value: f64) {
+        *self = RegF64::from(value);
+    }
+}
+
+impl GetRegisterValue<f64> for RegF64 {
+    fn get_value(&self) -> f64 {
+        f64::from(self)
     }
 }
 

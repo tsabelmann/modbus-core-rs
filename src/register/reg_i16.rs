@@ -1,5 +1,4 @@
-use super::{IntoRegIter, IntoRegIterMut};
-
+use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
 
 /// Modbus register that can be converter to and from [i16].
 pub struct RegI16 {
@@ -78,6 +77,18 @@ impl From<RegI16> for i16 {
 impl From<&RegI16> for i16 {
     fn from(value: &RegI16) -> Self {
         value.data[0] as i16
+    }
+}
+
+impl SetRegisterValue<i16> for RegI16 {
+    fn set_value(&mut self, value: i16) {
+        *self = RegI16::from(value);
+    }
+}
+
+impl GetRegisterValue<i16> for RegI16 {
+    fn get_value(&self) -> i16 {
+        i16::from(self)
     }
 }
 
