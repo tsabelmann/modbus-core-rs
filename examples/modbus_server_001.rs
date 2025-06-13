@@ -1,17 +1,115 @@
-use std::{io::{Read, Write}, net::TcpListener};
-use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::response::{ReadHoldingRegistersReponseEncoder, WriteSingleRegisterReponseEncoder}, register::{IntoRegIter, RegU16, RegU16Array, RegU32, RegU64}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
+use std::{io::{Read, Write}, net::TcpListener, path::Iter};
+use modbus_stack::{decode::request::{ReadHoldingRegistersRequestDecoder, WriteMultipleRegistersRequestDecoder, WriteSingleRegisterRequestDecoder}, encode::response::{ReadHoldingRegistersReponseEncoder, WriteMultipleRegistersReponseEncoder, WriteSingleRegisterReponseEncoder}, register::{IntoRegIter, RegU16, RegU16Array, RegU32, RW}, tcp::{ModbusTcpFrame, ModbusTcpFrameDecoder}, ExceptionCode, PduData};
 use modbus_stack::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 use modbus_stack::register::RO;
 
-// fn handle_client(mut stream: TcpStream) {
-//     let mut buffer = [0u8; 1024];
-//     if let Ok(length)  = stream.read(&mut buffer) {
-//         let slice = &buffer[0..length];
-//         if let Ok(string) = std::str::from_utf8(slice) {
-//             println!("string={}", string);
-//         }
+
+// trait Model {
+//     fn model_id() -> u16;
+//     fn model_length() -> u16;
+// }
+
+
+// trait CommonModel : Model {
+//     fn manufacturer(&self) -> &str;
+//     fn model(&self) -> &str;
+//     fn options(&self) -> &str;
+//     fn version(&self) -> &str;
+//     fn serial_number(&self) -> &str;
+//     fn device_address(&self) -> &str;
+// }
+
+// trait BatteryBaseModel: Model {
+
+// }
+
+
+// #[derive(Default)]
+// struct ConcreteBatteryBaseModel {
+//     nameplate_charge_capacity: RO<RegU16>,
+//     nameplate_energy_capacity: RO<RegU16>,
+//     nameplate_max_charge_rate: RO<RegU16>,
+//     nameplate_max_discharge_rate: RO<RegU16>,
+//     self_discharge_rate: RO<RegU16>,
+//     nameplate_max_soc: RO<RegU16>,
+//     nameplate_min_soc: RO<RegU16>,
+//     max_reserve_percent: RO<RegU16>,
+//     min_reserve_percent: RO<RegU16>,
+//     state_of_charge: RO<RegU16>,
+//     depth_of_discharge: RO<RegU16>,
+//     state_of_health: RO<RegU16>,
+//     cycle_count: RO<RegU32>,
+//     charge_status: RO<RegU16>,
+//     control_mode: RO<RegU16>,
+//     battery_heartbeat: RO<RegU16>,
+//     contoller_heartbeat: RW<RegU16>,
+//     alarm_reset: RW<RegU16>,
+//     battery_type: RO<RegU16>,
+//     state_of_the_battery_bank: RO<RegU16>,
+//     vendor_battery_bank_state: RO<RegU16>,
+//     warranty_date: RO<RegU32>,
+//     battery_event_1_bitfield: RO<RegU32>,
+//     battery_event_2_bitfield: RO<RegU32>,
+//     vendor_event_bitfield_1: RO<RegU32>,
+//     vendor_event_bitfield_2: RO<RegU32>,
+//     external_byttery_voltage: RO<RegU16>,
+//     max_battery_voltage: RO<RegU16>,
+//     min_battery_voltage: RO<RegU16>,
+//     max_cell_voltage: RO<RegU16>,
+//     max_cell_voltage_strinf: RO<RegU16>,
+//     max_cell_voltage_module: RO<RegU16>,
+//     min_cell_voltage: RO<RegU16>,
+//     min_cell_voltage_strinf: RO<RegU16>,
+//     min_cell_voltage_module: RO<RegU16>,
+//     average_cell_voltage: RO<RegU16>,
+//     total_dc_current: RO<RegU16>,
+//     max_charge_current: RO<RegU16>,
+//     max_discharge_current: RO<RegU16>,
+//     total_power: RO<RegU16>,
+//     inverter_state_request: RO<RegU16>,
+//     battery_power_request: RO<RegU16>,
+//     set_operation: RW<RegU16>,
+//     set_inverter_state: RW<RegU16>
+// }
+
+
+// struct RegIter<'a, I>
+// where 
+//     I : Iterator<Item = &'a u16>    
+// {
+//     iter: I
+// }
+
+// impl<'a, I: Iterator<Item = &'a u16>> RegIter<'a, I> {
+//     pub const fn new(iter: I) -> RegIter<'a, I> {
+//         RegIter { iter }
 //     }
 // }
+
+// impl<'a, I: Iterator<Item=&'a u16>> Iterator for RegIter<'a, I> {
+//     type Item = I::Item;
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.iter.next()
+//     }
+// }
+
+
+// impl<I> IntoRegIter for ConcreteBatteryBaseModel 
+// where 
+//     I: for<'a> Iterator<Item=&'a u16>,
+//     for<'a> Self: 'a
+// {
+//     type IntoIter<'a> = RegIter<'a, I>
+//     where
+//         Self: 'a;
+
+//     fn into_reg_iter<'a>(&'a self) -> Self::IntoIter<'a> {
+//         RegIter::new(self.alarm_reset.reg_iter())
+//     }
+// }
+
+
+
 
 pub const SUN_S: RO::<RegU32> = RO::<RegU32>::new(RegU32::new(0x53_75_6E_53));  
 pub const MODEL_1_ID: RO::<RegU16> = RO::<RegU16>::new(RegU16::new(1));
@@ -71,7 +169,7 @@ pub fn dispatch(starting_address: u16, quantity_of_registers: u16) -> Option<imp
 fn main() -> std::io::Result<()> {
     let mut buffer = [0u8; MODBUS_TCP_FRAME_DATA_LENTGH];
     let mut out_buffer = [0u8; MODBUS_TCP_FRAME_DATA_LENTGH];
-    let mut decoder = ModbusTcpFrameDecoder::new();
+    // let mut decoder = ModbusTcpFrameDecoder::new();
     let listener = TcpListener::bind("0.0.0.0:1502")?;
 
     // // accept connections and process them serially
@@ -92,11 +190,16 @@ fn main() -> std::io::Result<()> {
         };
 
         println!("Socket created!");
+        
+        // reset decoder
+        // decoder.reset();
+        let mut decoder = ModbusTcpFrameDecoder::new();
+
         'main: loop {
             match stream.read(&mut buffer) {
             Ok(size) => {
-                println!("Size: {:?}", size);
-                println!("Bytes: {:?}", &out_buffer[..size]);
+                // println!("Size: {:?}", size);
+                // println!("Bytes: {:?}", &out_buffer[..size]);
                 for val in &buffer[..size] {
                     if let Ok(mut frame) = decoder.push_data(*val) {
                         println!("Frame");
@@ -107,22 +210,42 @@ fn main() -> std::io::Result<()> {
                         println!("Function-Code: {:?}", frame.function_code());
 
                         match WriteMultipleRegistersRequestDecoder::new(&frame) {
-                            Ok(write_multiple_registers_request) => {
-                                println!("Write-Multiple-Registers");
-                                println!("Starting-Address: {:04X}", write_multiple_registers_request.starting_address());
-                                println!("Quantity-Of-Register: {}", write_multiple_registers_request.quantity_of_registers());
+                            Ok(req) => {
+                                
+                                println!("<Write-Multiple-Registers-Request>");
+                                println!("\tStarting-Address: {:04X}", req.starting_address());
+                                println!("\tQuantity-Of-Register: {}", req.quantity_of_registers());
+                                println!("\tByte-Count: {}", req.byte_count());
+                                println!("Bytes: {:02X?}", &buffer[..size]);
+                                    
+                                // for value in req {
+                                //     println!("\t\tRegister={:04X}", value);
+                                // }
+                                // println!();
 
-                                for value in write_multiple_registers_request {
-                                    println!("Register={:04X}", value);
-                                }
+                                let mut out_frame = unsafe {
+                                    ModbusTcpFrame::new_unchecked(&mut out_buffer)
+                                };
+                                frame.copy_to(&mut out_frame);
+                                
+
+                                match WriteMultipleRegistersReponseEncoder::encode(&mut out_frame, req.starting_address(), req.quantity_of_registers()) {
+                                    Ok(_) => {
+                                        println!("<Write-Multiple-Registers-Response>");
+                                        let length = (out_frame.length() + 6) as usize;
+                                        let result = stream.write(&out_buffer[..length]);
+                                    },
+                                    _ => {}
+                                };
+                                println!();
                             },
-                            Err(reason) => println!("<Write-Multiple-Registers> Not a success - Why? {:?}", reason)
+                            Err(reason) => {}
                         };
-
-
+                        
                         if let Ok(req) = ReadHoldingRegistersRequestDecoder::new(&frame) {
-                            println!("Starting-Address: {:04X}", req.starting_address());
-                            println!("Quantity-Of-Register: {}", req.quantity_of_registers());
+                            println!("<Read-Holding-Registers-Request>");
+                            println!("\tStarting-Address: {:04X}", req.starting_address());
+                            println!("\tQuantity-Of-Register: {}", req.quantity_of_registers());
 
                             let mut out_frame = unsafe {
                                 ModbusTcpFrame::new_unchecked(&mut out_buffer)
@@ -135,26 +258,27 @@ fn main() -> std::io::Result<()> {
                             if let Some(iter) = dispatch(starting_address, quantity_of_registers) {
                                 match ReadHoldingRegistersReponseEncoder::encode(&mut out_frame, quantity_of_registers, iter) {
                                     Ok(_) => {
-                                        println!("Response!");
+                                        println!("<Read-Holding-Registers-Response>");
                                         let length = (out_frame.length() + 6) as usize;
                                         let result = stream.write(&out_buffer[..length]);
-                                        println!("Written-Data: {:?}", result);
-                                        println!("Bytes: {:?}", &out_buffer[..length]);
+                                        // println!("Written-Data: {:?}", result);
+                                        // println!("Bytes: {:?}", &out_buffer[..length]);
                                     },
-                                    Err(reason) => println!("<Write-Multiple-Registers> Not a success - Why? {:?}", reason)
+                                    Err(reason) => println!("<Read-Holding-Registers> Not a success - Why? {:?}", reason)
                                 };
                             } else {
                                 match ReadHoldingRegistersReponseEncoder::encode_exception(&mut out_frame, ExceptionCode::IllegalDataAddress) {
                                     Ok(_) => {
-                                        println!("Exception!");
+                                        println!("<Read-Holding-Registers-Response-Exception>");
                                         let length = (out_frame.length() + 6) as usize;
                                         let result = stream.write(&out_buffer[..length]);
                                         println!("Written-Data: {:?}", result);
                                         println!("Bytes: {:?}", &out_buffer[..length]);
                                     },
-                                    Err(reason) => println!("Not a success - Why? {:?}", reason)
+                                    Err(reason) => println!("<Read-Holding-Registers> Not a success - Why? {:?}", reason)
                                 };
                             }
+                            println!();
                         } else {
                             // match ReadHoldingRegistersReponseEncoder::encode_exception(&mut out_frame, ExceptionCode::IllegalDataAddress) {
                             //     Ok(_) => {
@@ -169,9 +293,9 @@ fn main() -> std::io::Result<()> {
                         }
 
                         if let Ok(request) = WriteSingleRegisterRequestDecoder::new(&frame) {
-                            println!("Write-Single-Register");
-                            println!("Register-Address: {:04X}", request.register_address());
-                            println!("Register-Value: {:04X}", request.register_value());
+                            println!("<Write-Single-Register>");
+                            println!("\tRegister-Address: {:04X}", request.register_address());
+                            println!("\tRegister-Value: {:04X}", request.register_value());
 
                             let mut out_frame = unsafe {
                                 ModbusTcpFrame::new_unchecked(&mut out_buffer)
@@ -180,14 +304,15 @@ fn main() -> std::io::Result<()> {
 
                             match WriteSingleRegisterReponseEncoder::encode(&mut out_frame, request.register_address(), request.register_value()) {
                                 Ok(_) => {
-                                    println!("Success!");
+                                    println!("<Write-Single-Register-Resonse>");
                                     let length = (out_frame.length() + 6) as usize;
                                     let result = stream.write(&out_buffer[..length]);
-                                    println!("Written-Data: {:?}", result);
-                                    println!("Bytes: {:?}", &out_buffer[..length]);
+                                    // println!("Written-Data: {:?}", result);
+                                    // println!("Bytes: {:?}", &out_buffer[..length]);
                                 },
-                                Err(reason) => println!("<Write-Single-Register> Not a success - Why? {:?}", reason)
+                                Err(reason) => {}
                             };
+                            println!();
                         }
                     }
                 }
