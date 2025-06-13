@@ -80,6 +80,12 @@ impl From<&RegU32> for u32 {
     }
 }
 
+impl Default for RegU32 {
+    fn default() -> Self {
+        RegU32 { data: [0u16; 2] }
+    }
+}
+
 impl SetRegisterValue<u32> for RegU32 {
     fn set_value(&mut self, value: u32) {
         *self = RegU32::from(value);

@@ -80,6 +80,12 @@ impl From<&RegU16> for u16 {
     }
 }
 
+impl Default for RegU16 {
+    fn default() -> Self {
+        RegU16 { data: [0u16; 1] }
+    }
+}
+
 impl SetRegisterValue<u16> for RegU16 {
     fn set_value(&mut self, value: u16) {
         *self = RegU16::from(value);

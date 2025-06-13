@@ -1,5 +1,5 @@
 use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
-use core::{ops::{Index, IndexMut}, str::FromStr};
+use core::{ops::{Index, IndexMut}};
 
 
 /// Modbus register that can be converter to and from [u16; N].
@@ -137,6 +137,12 @@ impl<const N: usize> Index<usize> for RegU16Array<N> {
 impl<const N: usize> IndexMut<usize> for RegU16Array<N> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
+    }
+}
+
+impl<const N: usize> Default for RegU16Array<N> {
+    fn default() -> Self {
+        RegU16Array { data: [0u16; N] }
     }
 }
 

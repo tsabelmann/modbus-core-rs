@@ -93,6 +93,12 @@ impl<T: IntoRegIter> IntoRegIter for RO<T> {
     }
 }
 
+impl<T: IntoRegIter + Default> Default for RO<T> {
+    fn default() -> Self {
+        RO::new(T::default())
+    }
+}
+
 /// Read and writable register.
 pub struct RW<T>
 where 
@@ -128,6 +134,11 @@ impl<T: IntoRegIter + IntoRegIterMut> IntoRegIterMut for RW<T> {
     }
 }
 
+impl<T: IntoRegIter + IntoRegIterMut + Default> Default for RW<T> {
+    fn default() -> Self {
+        RW::new(T::default())
+    }
+}
 
 #[cfg(test)]
 mod register_tests {
