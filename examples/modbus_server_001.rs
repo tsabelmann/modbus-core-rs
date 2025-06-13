@@ -334,6 +334,8 @@
 // }
 
 
+use std::ops::{Deref, DerefMut};
+
 use modbus_stack::register::*;
 use modbus_stack::register::IntoRegIter;
 
@@ -475,14 +477,91 @@ impl<'a> Iterator for MultiBmsBatteryBaseModelIter<'a> {
 // }
 
 
-fn main() {
-    let mut battery_base_model = MultiBmsBatteryBaseModel::default();
-    *battery_base_model.nameplate_charge_capacity.get_mut() = 42.into();
+struct U32 {
+    array: [u16; 2]
+}
 
-    let length = battery_base_model.into_reg_iter().count();
-    assert_eq!(length, 4);
+struct ViewU32<'a> {
+    ptr: &'a U32,
+    value: u32
+}
 
-    for value in battery_base_model.into_reg_iter() {
-        println!("value={}", value);
+impl<'a> ViewU32<'a> {
+    pub const fn new(value: &'a U32) -> ViewU32<'a> {
+        let v = ((value.array[0] as u32) << 16) | (value.array[1] as u32);
+        ViewU32 {
+            ptr: value,
+            value: v
+        }
     }
+}
+
+
+struct ViewMutU32<'a> {
+    ptr: &'a mut U32,
+    value: u32
+}
+
+impl<'a> ViewMutU32<'a> {
+    pub const fn new(value: &'a mut U32) -> ViewMutU32<'a> {
+        let v = ((value.array[0] as u32) << 16) | (value.array[1] as u32);
+        ViewMutU32 {
+            ptr: value,
+            value: v
+        }
+    }
+}
+
+
+
+
+impl<'a> Deref for ViewU32<'a> {
+    type Target = u32;
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<'a> Deref for ViewMutU32<'a> {
+    type Target = u32;
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<'a> DerefMut for ViewMutU32<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.value
+    }
+}
+
+impl<'a> Drop for ViewMutU32<'a> {
+    fn drop(&mut self) {
+        let high_word = (self.value >> 16) as u16;
+        let low_word = (self.value) as u16;
+
+        self.ptr.array[0] = high_word;
+        self.ptr.array[1] = low_word;
+    }
+}
+
+
+fn main() {
+    let mut value = U32 { array: [0, 42] };
+    let ptr: u32 = *ViewU32::new(&value);
+    *ViewMutU32::new(&mut value) = 1337;
+
+
+    println!("array={:?}", value.array);
+
+
+    // let mut battery_base_model = MultiBmsBatteryBaseModel::default();
+    // *battery_base_model.nameplate_charge_capacity.get_mut() = 42.into();
+
+    // let length = battery_base_model.into_reg_iter().count();
+    // assert_eq!(length, 4);
+
+    // for value in battery_base_model.into_reg_iter() {
+    //     println!("value={}", value);
+    // }
 }
