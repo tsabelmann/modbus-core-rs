@@ -1,6 +1,7 @@
-use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
+use super::{GetRegisterValue, SetRegisterValue};
 
 /// Modbus register that can be converter to and from [f64].
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct RegF64 {
     data: [u16; 4]
 }
@@ -27,40 +28,6 @@ impl RegF64 {
         RegF64 {
             data
         }
-    }
-
-    /// Creates an immutable register iterator.
-    /// 
-    /// # Example
-    ///
-    /// ```
-    /// use modbus_stack::register::RegF64;
-    /// 
-    /// let reg = RegF64::new(42.0);
-    /// let iter = reg.reg_iter();
-    /// for value in iter {
-    ///     println!("value={}", value);
-    /// }
-    /// ````
-    pub const fn reg_iter(&self) -> RegF64Iter<'_> {
-        RegF64Iter::new(self)
-    }
-
-    /// Creates a mutable register iterator.
-    /// 
-    /// # Example
-    ///
-    /// ```
-    /// use modbus_stack::register::RegF64;
-    /// 
-    /// let mut reg = RegF64::new(42.0);
-    /// let iter = reg.reg_iter_mut();
-    /// for value in iter {
-    ///     *value = 0xADAC;
-    /// }
-    /// ````
-    pub const fn reg_iter_mut(&mut self) -> RegF64IterMut<'_> {
-        RegF64IterMut::new(self)
     }
 }
 
@@ -97,6 +64,30 @@ impl From<&RegF64> for f64 {
     }
 }
 
+impl IntoIterator for RegF64 {
+    type Item = u16;
+    type IntoIter = core::array::IntoIter<u16, 4>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a RegF64 {
+    type Item = &'a u16;
+    type IntoIter = core::slice::Iter<'a, u16>;
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.data).into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut RegF64 {
+    type Item = &'a mut u16;
+    type IntoIter = core::slice::IterMut<'a, u16>;
+    fn into_iter(self) -> Self::IntoIter {
+        (&mut self.data).into_iter()
+    }
+}
+
 impl SetRegisterValue<f64> for RegF64 {
     fn set_value(&mut self, value: f64) {
         *self = RegF64::from(value);
@@ -109,93 +100,15 @@ impl GetRegisterValue<f64> for RegF64 {
     }
 }
 
-/// Immutable register iterator for [RegF64].
-pub struct RegF64Iter<'a> {
-    value: &'a RegF64,
-    index: u8
-}
-
-/// Mutable register iterator for [RegF64].
-pub struct RegF64IterMut<'a> {
-    value: &'a mut RegF64,
-    index: u8
-}
-
-impl<'a> RegF64Iter<'a> {
-    pub const fn new(value: &'a RegF64) -> RegF64Iter<'a> {
-        RegF64Iter {
-            value,
-            index: 0
-        }
-    }
-}
-
-impl<'a> RegF64IterMut<'a> {
-    pub const fn new(value: &'a mut RegF64) -> RegF64IterMut<'a> {
-        RegF64IterMut {
-            value,
-            index: 0
-        }
-    }
-}
-
-impl<'a> Iterator for RegF64Iter<'a> {
-    type Item = &'a u16;
-    
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.index {
-            0..4 => {
-                let idx = self.index as usize;
-                self.index += 1;
-                Some(&self.value.data[idx])
-            },
-            _ => None
-        }
-    }
-}
-
-impl<'a> Iterator for RegF64IterMut<'a> {
-    type Item = &'a mut u16;
-    
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.index {
-            0..4 => {
-                let idx = self.index as usize;
-                self.index += 1;
-                let value_ptr: *mut RegF64 = self.value;
-                
-                // unsafe nötig, weil wir &'a mut u16 aus &mut self.value extrahieren wollen
-                unsafe {
-                    Some(&mut (*value_ptr).data[idx])
-                }
-            },
-            _ => None
-        }
-    }
-}
-
-impl IntoRegIter for RegF64 {
-    type IntoIter<'a> = RegF64Iter<'a>;
-    fn into_reg_iter(&self) -> Self::IntoIter<'_> {
-        RegF64Iter::new(self)
-    }
-} 
-
-impl IntoRegIterMut for RegF64 {
-    type IntoIterMut<'a> = RegF64IterMut<'a>;
-    fn into_reg_iter_mut(&mut self) -> Self::IntoIterMut<'_> {
-        RegF64IterMut::new(self)
-    }
-}
-
 #[cfg(test)]
 mod reg_f64_tests {
+    use crate::register::{IntoRegIter, IntoRegIterMut};
     use super::*;
 
     #[test]
     fn reg_iter_001() {
         let reg0 = RegF64::new(0.0);
-        let mut iter = reg0.reg_iter();
+        let mut iter = reg0.into_reg_iter();
         assert_eq!(Some(&0x0000), iter.next());
         assert_eq!(Some(&0x0000), iter.next());
         assert_eq!(Some(&0x0000), iter.next());
@@ -208,7 +121,7 @@ mod reg_f64_tests {
         let mut reg0 = RegF64::new(0.0);
 
         // check values equal initialization
-        let mut iter = reg0.reg_iter();
+        let mut iter = reg0.into_reg_iter();
         assert_eq!(Some(&0x0000), iter.next());
         assert_eq!(Some(&0x0000), iter.next());
         assert_eq!(Some(&0x0000), iter.next());
@@ -226,7 +139,7 @@ mod reg_f64_tests {
         };
 
         // change values
-        let mut iter = reg0.reg_iter_mut();
+        let mut iter = reg0.into_reg_iter_mut();
         if let Some(reff) = iter.next() {
             *reff = data[0];
         }

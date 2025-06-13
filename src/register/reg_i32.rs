@@ -1,6 +1,7 @@
-use super::{IntoRegIter, IntoRegIterMut, GetRegisterValue, SetRegisterValue};
+use super::{GetRegisterValue, SetRegisterValue};
 
 /// Modbus register that can be converter to and from [u8].
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct RegI32 {
     data: [u16; 2]
 }
@@ -19,40 +20,6 @@ impl RegI32 {
         RegI32 {
             data: [((value >> 16) & 0xFFFF) as u16, (value & 0xFFFF) as u16]
         }
-    }
-
-    /// Creates an immutable register iterator.
-    /// 
-    /// # Example
-    ///
-    /// ```
-    /// use modbus_stack::register::RegI32;
-    /// 
-    /// let reg = RegI32::new(42);
-    /// let iter = reg.reg_iter();
-    /// for value in iter {
-    ///     println!("value={}", value);
-    /// }
-    /// ````
-    pub const fn reg_iter(&self) -> RegI32Iter<'_> {
-        RegI32Iter::new(self)
-    }
-
-    /// Creates a mutable register iterator.
-    /// 
-    /// # Example
-    ///
-    /// ```
-    /// use modbus_stack::register::RegI32;
-    /// 
-    /// let mut reg = RegI32::new(42);
-    /// let iter = reg.reg_iter_mut();
-    /// for value in iter {
-    ///     *value = 0xADAC;
-    /// }
-    /// ````
-    pub const fn reg_iter_mut(&mut self) -> RegI32IterMut<'_> {
-        RegI32IterMut::new(self)
     }
 }
 
@@ -80,6 +47,30 @@ impl From<&RegI32> for i32 {
     }
 }
 
+impl IntoIterator for RegI32 {
+    type Item = u16;
+    type IntoIter = core::array::IntoIter<u16, 2>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a RegI32 {
+    type Item = &'a u16;
+    type IntoIter = core::slice::Iter<'a, u16>;
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.data).into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut RegI32 {
+    type Item = &'a mut u16;
+    type IntoIter = core::slice::IterMut<'a, u16>;
+    fn into_iter(self) -> Self::IntoIter {
+        (&mut self.data).into_iter()
+    }
+}
+
 impl SetRegisterValue<i32> for RegI32 {
     fn set_value(&mut self, value: i32) {
         *self = RegI32::from(value);
@@ -92,87 +83,9 @@ impl GetRegisterValue<i32> for RegI32 {
     }
 }
 
-/// Immutable register iterator for [RegI32].
-pub struct RegI32Iter<'a> {
-    value: &'a RegI32,
-    index: u8
-}
-
-/// Mutable register iterator for [RegI32].
-pub struct RegI32IterMut<'a> {
-    value: &'a mut RegI32,
-    index: u8
-}
-
-impl<'a> RegI32Iter<'a> {
-    pub const fn new(value: &'a RegI32) -> RegI32Iter<'a> {
-        RegI32Iter {
-            value,
-            index: 0
-        }
-    }
-}
-
-impl<'a> RegI32IterMut<'a> {
-    pub const fn new(value: &'a mut RegI32) -> RegI32IterMut<'a> {
-        RegI32IterMut {
-            value,
-            index: 0
-        }
-    }
-}
-
-impl<'a> Iterator for RegI32Iter<'a> {
-    type Item = &'a u16;
-    
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.index {
-            0..2 => {
-                let idx = self.index as usize;
-                self.index += 1;
-                Some(&self.value.data[idx])
-            },
-            _ => None
-        }
-    }
-}
-
-impl<'a> Iterator for RegI32IterMut<'a> {
-    type Item = &'a mut u16;
-    
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.index {
-            0..2 => {
-                let idx = self.index as usize;
-                self.index += 1;
-                let value_ptr: *mut RegI32 = self.value;
-                
-                // unsafe nötig, weil wir &'a mut u16 aus &mut self.value extrahieren wollen
-                unsafe {
-                    Some(&mut (*value_ptr).data[idx])
-                }
-            },
-            _ => None
-        }
-    }
-}
-
-impl IntoRegIter for RegI32 {
-    type IntoIter<'a> = RegI32Iter<'a>;
-    fn into_reg_iter(&self) -> Self::IntoIter<'_> {
-        RegI32Iter::new(self)
-    }
-} 
-
-impl IntoRegIterMut for RegI32 {
-    type IntoIterMut<'a> = RegI32IterMut<'a>;
-    fn into_reg_iter_mut(&mut self) -> Self::IntoIterMut<'_> {
-        RegI32IterMut::new(self)
-    }
-}
-
 #[cfg(test)]
 mod reg_i32_tests {
+    use crate::register::{IntoRegIter, IntoRegIterMut};
     use super::*;
 
     #[test]
@@ -180,8 +93,8 @@ mod reg_i32_tests {
         let reg0 = RegI32::new(-1);
         let reg1 = RegI32::new(-2);
 
-        let iter0 = reg0.reg_iter();
-        let iter1 = reg1.reg_iter();
+        let iter0 = reg0.into_reg_iter();
+        let iter1 = reg1.into_reg_iter();
 
         let mut iter = iter0.chain(iter1);
         assert_eq!(Some(&0xFFFF), iter.next());
@@ -198,10 +111,10 @@ mod reg_i32_tests {
         let mut reg2 = RegI32::new(-3);
         let mut reg3 = RegI32::new(-4);
 
-        let iter0 = reg0.reg_iter();
-        let iter1 = reg1.reg_iter();
-        let iter2 = reg2.reg_iter();
-        let iter3 = reg3.reg_iter();
+        let iter0 = reg0.into_reg_iter();
+        let iter1 = reg1.into_reg_iter();
+        let iter2 = reg2.into_reg_iter();
+        let iter3 = reg3.into_reg_iter();
 
         // check values equal initialization
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
@@ -216,10 +129,10 @@ mod reg_i32_tests {
         assert_eq!(None, iter.next());
 
         // Change values
-        let iter0: RegI32IterMut<'_> = reg0.reg_iter_mut();
-        let iter1 = reg1.reg_iter_mut();
-        let iter2 = reg2.reg_iter_mut();
-        let iter3 = reg3.reg_iter_mut();
+        let iter0 = reg0.into_reg_iter_mut();
+        let iter1 = reg1.into_reg_iter_mut();
+        let iter2 = reg2.into_reg_iter_mut();
+        let iter3 = reg3.into_reg_iter_mut();
         
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         if let Some(reff) = iter.next() {
@@ -255,10 +168,10 @@ mod reg_i32_tests {
         }
 
         // check for change
-        let iter0 = reg0.reg_iter();
-        let iter1 = reg1.reg_iter();
-        let iter2 = reg2.reg_iter();
-        let iter3 = reg3.reg_iter();
+        let iter0 = reg0.into_reg_iter();
+        let iter1 = reg1.into_reg_iter();
+        let iter2 = reg2.into_reg_iter();
+        let iter3 = reg3.into_reg_iter();
         
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3);
         assert_eq!(Some(&0x00FF), iter.next());
