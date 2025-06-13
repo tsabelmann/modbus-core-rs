@@ -29,7 +29,7 @@ impl<T: PduDataMut> WriteMultipleRegistersReponseEncoder for T {
         }
 
         // write function code
-        self.set_function_code(FunctionKind::Normal(FunctionCode::WriteSingleRegister));
+        self.set_function_code(FunctionKind::Normal(FunctionCode::WriteMultipleRegisters));
 
         // write starting address
         let data = starting_address.to_be_bytes();
@@ -57,7 +57,7 @@ impl<T: PduDataMut> WriteMultipleRegistersReponseEncoder for T {
         }
 
         // set function code
-        self.set_function_code(FunctionKind::new_exception(FunctionCode::ReadHoldingRegisters));
+        self.set_function_code(FunctionKind::new_exception(FunctionCode::WriteMultipleRegisters));
 
         // compute exception code
         let exception_code = match code {
