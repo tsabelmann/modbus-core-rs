@@ -548,9 +548,16 @@ impl<'a> Drop for ViewMutU32<'a> {
 
 fn main() {
     let mut value = U32 { array: [0, 42] };
-    let ptr: u32 = *ViewU32::new(&value);
-    *ViewMutU32::new(&mut value) = 1337;
+    let ptr = ViewU32::new(&value);
+    
+    let new_value = *ptr;
+    println!("new_value={}", new_value);
+    
+    // {
+    //     let new_ptr = ViewMutU32::new(&mut value);
+    // }
 
+    // let new_value = *ptr;
 
     println!("array={:?}", value.array);
 
