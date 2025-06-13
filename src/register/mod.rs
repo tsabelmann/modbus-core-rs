@@ -1,4 +1,6 @@
 mod reg_bool;
+use core::ops::{Deref, DerefMut};
+
 pub use reg_bool::{RegBool};
 
 mod reg_u8;
@@ -131,6 +133,19 @@ impl<T: Default> Default for RO<T> {
     }
 }
 
+impl<T> Deref for RO<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+impl<T> DerefMut for RO<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
+    }
+}
+
 /// Read and writable register.
 pub struct RW<T> {
     data: T
@@ -191,6 +206,19 @@ impl<T: Clone> Clone for RW<T> {
 impl<T: Default> Default for RW<T> {
     fn default() -> Self {
         RW::new(T::default())
+    }
+}
+
+impl<T> Deref for RW<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+impl<T> DerefMut for RW<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
     }
 }
 
@@ -297,7 +325,6 @@ mod register_tests {
         assert_eq!(Some(&0xCDEF), iter.next());
         assert_eq!(None, iter.next());
     }
-
 
     #[test]
     fn size_of_ro_001() {
