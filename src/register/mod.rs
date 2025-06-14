@@ -82,6 +82,7 @@ pub trait GetRegisterValue<T> {
 }
 
 /// Read-only register enforced by the type system.
+#[derive(Debug)]
 pub struct RO<T> {
     data: T
 }
@@ -133,20 +134,8 @@ impl<T: Default> Default for RO<T> {
     }
 }
 
-impl<T> Deref for RO<T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.data
-    }
-}
-
-impl<T> DerefMut for RO<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.data
-    }
-}
-
 /// Read and writable register.
+#[derive(Debug)]
 pub struct RW<T> {
     data: T
 }
@@ -206,19 +195,6 @@ impl<T: Clone> Clone for RW<T> {
 impl<T: Default> Default for RW<T> {
     fn default() -> Self {
         RW::new(T::default())
-    }
-}
-
-impl<T> Deref for RW<T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.data
-    }
-}
-
-impl<T> DerefMut for RW<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.data
     }
 }
 
