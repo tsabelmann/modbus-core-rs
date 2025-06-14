@@ -547,23 +547,13 @@ impl<'a> Drop for ViewMutU32<'a> {
 
 
 fn main() {
-    let mut value = U32 { array: [0, 42] };
+    let mut reg = RO::new(modbus_stack::register::RegU64::new(0xAABBCCDDEE));
+    println!("reg={:02X?}", reg);
 
-    let mut reg = modbus_stack::register::RO::new(modbus_stack::register::RegF32::new(20.01));
-    println!("reff={:?}", reg.get_value());
-
-    let ptr = ViewU32::new(&value);
-    
-    let new_value = *ptr;
-    println!("new_value={}", new_value);
-    
-    // {
-    //     let new_ptr = ViewMutU32::new(&mut value);
-    // }
-
-    // let new_value = *ptr;
-
-    println!("array={:?}", value.array);
+    for i in (&reg).into_iter() {
+        
+    }
+    println!("reg={:02X?}", reg);
 
 
     // let mut battery_base_model = MultiBmsBatteryBaseModel::default();
