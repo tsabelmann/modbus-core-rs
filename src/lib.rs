@@ -7,7 +7,7 @@ extern crate std;
 /// Modbus related constants for frame size, number of registers, etc.
 pub mod constants;
 
-// pub mod decode;
+pub mod decode;
 
 pub mod encode;
 
