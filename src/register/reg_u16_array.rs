@@ -148,6 +148,12 @@ impl<const N: usize> GetRegisterValue<[u16; N]> for RegU16Array<N> {
     }
 }
 
+impl<'a, const N: usize> GetRegisterValue<&'a [u16]> for &'a RegU16Array<N> {
+    fn get_value(&self) -> &'a [u16] {
+        &self.data
+    }
+}
+
 #[cfg(test)]
 mod reg_u16_array_tests {
 
