@@ -1,6 +1,4 @@
 mod reg_bool;
-use core::ops::{Deref, DerefMut};
-
 pub use reg_bool::{RegBool};
 
 mod reg_u8;
