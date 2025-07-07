@@ -1,6 +1,4 @@
-use crate::register::Register;
-
-use super::{GetRegisterValue, SetRegisterValue};
+use super::{GetRegisterValue, SetRegisterValue, Register};
 use core::{ops::{Index, IndexMut}};
 
 /// Modbus register that can be converter to and from [u16; N].
