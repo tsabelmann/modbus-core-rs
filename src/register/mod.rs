@@ -79,6 +79,13 @@ pub trait GetRegisterValue<T> {
     fn get_value(&self) -> T;
 }
 
+pub trait Register {
+    type Item;
+    fn registers(&self) -> &[u16];
+    fn value(&self) -> Self::Item;
+    fn set_value(&mut self, value: Self::Item);
+}
+
 /// Read-only register enforced by the type system.
 #[derive(Debug)]
 pub struct RO<T> {

@@ -1,3 +1,5 @@
+use crate::register::Register;
+
 use super::{GetRegisterValue, SetRegisterValue};
 use core::{ops::{Index, IndexMut}};
 
@@ -151,6 +153,21 @@ impl<const N: usize> GetRegisterValue<[u16; N]> for RegU16Array<N> {
 impl<'a, const N: usize> GetRegisterValue<&'a [u16]> for &'a RegU16Array<N> {
     fn get_value(&self) -> &'a [u16] {
         &self.data
+    }
+}
+
+impl<const N: usize> Register for RegU16Array<N> {
+    type Item = [u16; N];
+    fn registers(&self) -> &[u16] {
+        &self.data
+    }
+
+    fn value(&self) -> Self::Item {
+        self.data
+    }
+
+    fn set_value(&mut self, value: Self::Item) {
+        self.data = value;
     }
 }
 
