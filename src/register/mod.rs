@@ -91,6 +91,12 @@ impl<T> RO<T> {
             data: value
         }
     }
+
+    pub fn modify<F, U>(&mut self, f: F) -> U
+    where F: FnOnce(&mut T) -> U 
+    {
+        f(&mut self.data)
+    }
 }
 
 impl<T: IntoIterator<Item = u16>> IntoIterator for RO<T> {
@@ -153,6 +159,12 @@ impl<T> RW<T> {
         RW {
             data: value
         }
+    }
+
+    pub fn modify<F, U>(&mut self, f: F) -> U
+    where F: FnOnce(&mut T) -> U 
+    {
+        f(&mut self.data)
     }
 }
 
