@@ -1,4 +1,4 @@
-use crate::register::{SetRegisterValue, GetRegisterValue};
+use crate::register::{Writable, Readable};
 
 /// Modbus register that can be converter to and from [bool].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -79,14 +79,14 @@ impl<'a> IntoIterator for &'a mut RegBool {
     }
 }
 
-impl SetRegisterValue<bool> for RegBool {
-    fn set_value(&mut self, value: bool) {
+impl Writable<bool> for RegBool {
+    fn write(&mut self, value: bool) {
         *self = RegBool::from(value);
     }
 }
 
-impl GetRegisterValue<bool> for RegBool {
-    fn get_value(&self) -> bool {
+impl Readable<bool> for RegBool {
+    fn read(&self) -> bool {
         bool::from(self)
     }
 }

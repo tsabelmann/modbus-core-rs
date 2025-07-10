@@ -1,4 +1,4 @@
-use super::{GetRegisterValue, SetRegisterValue, Register};
+use super::{Readable, Writable};
 use core::{ops::{Index, IndexMut}};
 
 /// Modbus register that can be converter to and from [u16; N].
@@ -136,36 +136,21 @@ impl<'a, const N: usize> IntoIterator for &'a mut RegU16Array<N> {
     }
 }
 
-impl<const N: usize> SetRegisterValue<[u16; N]> for RegU16Array<N> {
-    fn set_value(&mut self, value: [u16; N]) {
+impl<const N: usize> Writable<[u16; N]> for RegU16Array<N> {
+    fn write(&mut self, value: [u16; N]) {
         *self = RegU16Array::from(value);
     }
 }
 
-impl<const N: usize> GetRegisterValue<[u16; N]> for RegU16Array<N> {
-    fn get_value(&self) -> [u16; N] {
+impl<const N: usize> Readable<[u16; N]> for RegU16Array<N> {
+    fn read(&self) -> [u16; N] {
         self.into()
     }
 }
 
-impl<'a, const N: usize> GetRegisterValue<&'a [u16]> for &'a RegU16Array<N> {
-    fn get_value(&self) -> &'a [u16] {
+impl<'a, const N: usize> Readable<&'a [u16]> for &'a RegU16Array<N> {
+    fn read(&self) -> &'a [u16] {
         &self.data
-    }
-}
-
-impl<const N: usize> Register for RegU16Array<N> {
-    type Item = [u16; N];
-    fn registers(&self) -> &[u16] {
-        &self.data
-    }
-
-    fn value(&self) -> Self::Item {
-        self.data
-    }
-
-    fn set_value(&mut self, value: Self::Item) {
-        self.data = value;
     }
 }
 

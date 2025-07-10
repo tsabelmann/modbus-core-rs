@@ -70,13 +70,13 @@ impl<'a, T: IntoIterator<Item = &'a mut u16>> IntoRegIterMut<'a> for T {
 }
 
 /// Trait for setting internal registers based on the provided value of type T
-pub trait SetRegisterValue<T> {
-    fn set_value(&mut self, value: T);
+pub trait Writable<T> {
+    fn write(&mut self, value: T);
 }
 
 /// Trait for getting the value of type T from the internal registers
-pub trait GetRegisterValue<T> {
-    fn get_value(&self) -> T;
+pub trait Readable<T> {
+    fn read(&self) -> T;
 }
 
 pub trait Register {
@@ -85,6 +85,7 @@ pub trait Register {
     fn value(&self) -> Self::Item;
     fn set_value(&mut self, value: Self::Item);
 }
+
 
 /// Read-only register enforced by the type system.
 #[derive(Debug)]
@@ -97,14 +98,6 @@ impl<T> RO<T> {
         RO {
             data: value
         }
-    }
-
-    pub const fn get(&self) -> &T {
-        &self.data
-    }
-
-    pub const fn get_mut(&mut self) -> &mut T {
-        &mut self.data
     }
 }
 
@@ -139,6 +132,24 @@ impl<T: Default> Default for RO<T> {
     }
 }
 
+impl<T, U> Readable<U> for RO<T> 
+where 
+    T: Readable<U>    
+{
+    fn read(&self) -> U {
+        self.data.read()   
+    }
+}
+
+impl<T, U> Writable<U> for RO<T> 
+where 
+    T: Writable<U>    
+{
+    fn write(&mut self, value: U) {
+        self.data.write(value);
+    }
+}
+
 /// Read and writable register.
 #[derive(Debug)]
 pub struct RW<T> {
@@ -150,14 +161,6 @@ impl<T> RW<T> {
         RW {
             data: value
         }
-    }
-
-    pub const fn get(&self) -> &T {
-        &self.data
-    }
-
-    pub const fn get_mut(&mut self) -> &mut T {
-        &mut self.data
     }
 }
 
@@ -200,6 +203,24 @@ impl<T: Clone> Clone for RW<T> {
 impl<T: Default> Default for RW<T> {
     fn default() -> Self {
         RW::new(T::default())
+    }
+}
+
+impl<T, U> Readable<U> for RW<T> 
+where 
+    T: Readable<U>    
+{
+    fn read(&self) -> U {
+        self.data.read()   
+    }
+}
+
+impl<T, U> Writable<U> for RW<T> 
+where 
+    T: Writable<U>    
+{
+    fn write(&mut self, value: U) {
+        self.data.write(value);
     }
 }
 

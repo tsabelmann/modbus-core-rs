@@ -1,4 +1,4 @@
-use super::{GetRegisterValue, SetRegisterValue};
+use super::{Readable, Writable};
 
 /// Modbus register that can be converter to and from [f32].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -82,14 +82,14 @@ impl<'a> IntoIterator for &'a mut RegF32 {
     }
 }
 
-impl SetRegisterValue<f32> for RegF32 {
-    fn set_value(&mut self, value: f32) {
+impl Writable<f32> for RegF32 {
+    fn write(&mut self, value: f32) {
         *self = RegF32::from(value);
     }
 }
 
-impl GetRegisterValue<f32> for RegF32 {
-    fn get_value(&self) -> f32 {
+impl Readable<f32> for RegF32 {
+    fn read(&self) -> f32 {
         f32::from(self)
     }
 }
