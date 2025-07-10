@@ -1,4 +1,4 @@
-use super::{Readable, Writable};
+use super::{ReadRegister, WriteRegister};
 
 /// Modbus register that can be converter to and from [u8].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -71,14 +71,14 @@ impl<'a> IntoIterator for &'a mut RegI32 {
     }
 }
 
-impl Writable<i32> for RegI32 {
+impl WriteRegister<i32> for RegI32 {
     fn write(&mut self, value: i32) {
         *self = RegI32::from(value);
     }
 }
 
-impl Readable<i32> for RegI32 {
-    fn read(&self) -> i32 {
+impl<'a> ReadRegister<i32> for &'a RegI32 {
+    fn read(self) -> i32 {
         i32::from(self)
     }
 }

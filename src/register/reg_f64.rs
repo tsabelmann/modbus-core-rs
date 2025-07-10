@@ -1,4 +1,4 @@
-use super::{Readable, Writable};
+use super::{ReadRegister, WriteRegister};
 
 /// Modbus register that can be converter to and from [f64].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -88,14 +88,14 @@ impl<'a> IntoIterator for &'a mut RegF64 {
     }
 }
 
-impl Writable<f64> for RegF64 {
+impl WriteRegister<f64> for RegF64 {
     fn write(&mut self, value: f64) {
         *self = RegF64::from(value);
     }
 }
 
-impl Readable<f64> for RegF64 {
-    fn read(&self) -> f64 {
+impl<'a> ReadRegister<f64> for &'a RegF64 {
+    fn read(self) -> f64 {
         f64::from(self)
     }
 }

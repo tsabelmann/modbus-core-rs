@@ -70,22 +70,14 @@ impl<'a, T: IntoIterator<Item = &'a mut u16>> IntoRegIterMut<'a> for T {
 }
 
 /// Trait for setting internal registers based on the provided value of type T
-pub trait Writable<T> {
+pub trait WriteRegister<T> {
     fn write(&mut self, value: T);
 }
 
 /// Trait for getting the value of type T from the internal registers
-pub trait Readable<T> {
-    fn read(&self) -> T;
+pub trait ReadRegister<T> {
+    fn read(self) -> T;
 }
-
-pub trait Register {
-    type Item;
-    fn registers(&self) -> &[u16];
-    fn value(&self) -> Self::Item;
-    fn set_value(&mut self, value: Self::Item);
-}
-
 
 /// Read-only register enforced by the type system.
 #[derive(Debug)]
@@ -132,18 +124,18 @@ impl<T: Default> Default for RO<T> {
     }
 }
 
-impl<T, U> Readable<U> for RO<T> 
-where 
-    T: Readable<U>    
-{
-    fn read(&self) -> U {
-        self.data.read()   
-    }
-}
+// impl<T, U> ReadRegister<U> for RO<T> 
+// where 
+//     T: ReadRegister<U>    
+// {
+//     fn read(&self) -> U {
+//         self.data.read()   
+//     }
+// }
 
-impl<T, U> Writable<U> for RO<T> 
+impl<T, U> WriteRegister<U> for RO<T> 
 where 
-    T: Writable<U>    
+    T: WriteRegister<U>    
 {
     fn write(&mut self, value: U) {
         self.data.write(value);
@@ -206,18 +198,18 @@ impl<T: Default> Default for RW<T> {
     }
 }
 
-impl<T, U> Readable<U> for RW<T> 
+impl<'a, T, U> ReadRegister<U> for &'a RW<T> 
 where 
-    T: Readable<U>    
+    &'a T: ReadRegister<U>    
 {
-    fn read(&self) -> U {
-        self.data.read()   
+    fn read(self) -> U {
+        (&self.data).read()
     }
 }
 
-impl<T, U> Writable<U> for RW<T> 
+impl<T, U> WriteRegister<U> for RW<T> 
 where 
-    T: Writable<U>    
+    T: WriteRegister<U>    
 {
     fn write(&mut self, value: U) {
         self.data.write(value);
