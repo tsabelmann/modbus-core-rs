@@ -124,14 +124,14 @@ impl<T: Default> Default for RO<T> {
     }
 }
 
-// impl<T, U> ReadRegister<U> for RO<T> 
-// where 
-//     T: ReadRegister<U>    
-// {
-//     fn read(&self) -> U {
-//         self.data.read()   
-//     }
-// }
+impl<'a, T, U> ReadRegister<U> for &'a RO<T> 
+where 
+    &'a T: ReadRegister<U>    
+{
+    fn read(self) -> U {
+        self.data.read()   
+    }
+}
 
 impl<T, U> WriteRegister<U> for RO<T> 
 where 
