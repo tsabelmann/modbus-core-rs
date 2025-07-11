@@ -139,7 +139,7 @@ where
     }
 }
 
-impl<'a, T, U> WriteRegister<U> for &'a mut RO<T> 
+impl<T, U> WriteRegister<U> for RO<T> 
 where 
     T: WriteRegister<U>    
 {
@@ -187,7 +187,7 @@ where
     }
 }
 
-impl<'a, T> IntoIterator for &'a mut  RW<T> 
+impl<'a, T> IntoIterator for &'a mut RW<T> 
 where 
     &'a mut T : IntoIterator<Item = &'a mut u16>
 {
@@ -219,7 +219,7 @@ where
     }
 }
 
-impl<'a, T, U> WriteRegister<U> for &'a mut RW<T> 
+impl<T, U> WriteRegister<U> for RW<T> 
 where 
     T: WriteRegister<U>
 {
