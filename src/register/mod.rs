@@ -221,10 +221,10 @@ where
 
 impl<'a, T, U> WriteRegister<U> for &'a mut RW<T> 
 where 
-    T: WriteRegister<U>    
+    T: WriteRegister<U>
 {
     fn write(&mut self, value: U) {
-        self.data.write(value);
+        self.data.write(value);    
     }
 }
 
