@@ -188,7 +188,7 @@ where &'a T: IntoRegIter<'a>
     }
 }
 
-impl<'a, T> IntoIterator for &'a mut RO<T> 
+impl<'a, T> IntoIterator for &'a mut RW<T> 
 where &'a mut T: IntoRegIterMut<'a>
 {
     type Item = &'a mut u16;
