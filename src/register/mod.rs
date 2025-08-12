@@ -40,7 +40,6 @@ pub use reg_f64::{RegF64};
 mod reg_u16_array;
 pub use reg_u16_array::{RegU16Array};
 
-
 /// Trait for turning a reference into a immutable register iterator.
 pub trait IntoRegIter<'a> {
     type IntoIter: Iterator<Item = &'a u16>;
@@ -53,21 +52,21 @@ pub trait IntoRegIterMut<'a> {
     fn into_reg_iter_mut(self) -> Self::IntoIter;
 }
 
-/// Auto implementation for [IntoRegIter] if it implements [IntoIterator<Item = &'a u16>].
-impl<'a, T: IntoIterator<Item = &'a u16>> IntoRegIter<'a> for T {
-    type IntoIter = T::IntoIter;
-    fn into_reg_iter(self) -> Self::IntoIter {
-        self.into_iter()
-    }
-}
+// /// Auto implementation for [IntoRegIter] if it implements [IntoIterator<Item = &'a u16>].
+// impl<'a, T: IntoIterator<Item = &'a u16>> IntoRegIter<'a> for T {
+//     type IntoIter = T::IntoIter;
+//     fn into_reg_iter(self) -> Self::IntoIter {
+//         self.into_iter()
+//     }
+// }
 
-/// Auto implementation for [IntoRegIterMut] if it implements [IntoIterator<Item = &'a u16>].
-impl<'a, T: IntoIterator<Item = &'a mut u16>> IntoRegIterMut<'a> for T {
-    type IntoIter = T::IntoIter;
-    fn into_reg_iter_mut(self) -> Self::IntoIter {
-        self.into_iter()
-    }
-}
+// /// Auto implementation for [IntoRegIterMut] if it implements [IntoIterator<Item = &'a u16>].
+// impl<'a, T: IntoIterator<Item = &'a mut u16>> IntoRegIterMut<'a> for T {
+//     type IntoIter = T::IntoIter;
+//     fn into_reg_iter_mut(self) -> Self::IntoIter {
+//         self.into_iter()
+//     }
+// }
 
 /// Trait for setting internal registers based on the provided value of type T
 pub trait WriteRegister<T> {
@@ -99,24 +98,35 @@ impl<T> RO<T> {
     }
 }
 
-impl<T: IntoIterator<Item = u16>> IntoIterator for RO<T> {
-    type Item = T::Item;
-    type IntoIter = T::IntoIter;
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
-    }
-} 
 
 impl<'a, T> IntoIterator for &'a RO<T> 
-where 
-    &'a T : IntoIterator<Item = &'a u16>
+where &'a T: IntoRegIter<'a>
 {
-    type Item = <&'a T as IntoIterator>::Item;
-    type IntoIter = <&'a T as IntoIterator>::IntoIter;
+    type Item = &'a u16;
+    type IntoIter = <&'a T as IntoRegIter<'a>>::IntoIter;
     fn into_iter(self) -> Self::IntoIter {
-        (&self.data).into_iter()
+        (&self.data).into_reg_iter()
     }
 }
+
+// impl<T: IntoIterator<Item = u16>> IntoIterator for RO<T> {
+//     type Item = T::Item;
+//     type IntoIter = T::IntoIter;
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.data.into_iter()
+//     }
+// } 
+
+// impl<'a, T> IntoIterator for &'a RO<T> 
+// where 
+//     &'a T : IntoIterator<Item = &'a u16>
+// {
+//     type Item = <&'a T as IntoIterator>::Item;
+//     type IntoIter = <&'a T as IntoIterator>::IntoIter;
+//     fn into_iter(self) -> Self::IntoIter {
+//         (&self.data).into_iter()
+//     }
+// }
 
 impl<T: Clone> Clone for RO<T> {
     fn clone(&self) -> Self {
@@ -168,35 +178,55 @@ impl<T> RW<T> {
     }
 }
 
-impl<T: IntoIterator<Item = u16>> IntoIterator for RW<T> {
-    type Item = T::Item;
-    type IntoIter = T::IntoIter;
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
-    }
-} 
-
 impl<'a, T> IntoIterator for &'a RW<T> 
-where 
-    &'a T : IntoIterator<Item = &'a u16>
+where &'a T: IntoRegIter<'a>
 {
-    type Item = <&'a T as IntoIterator>::Item;
-    type IntoIter = <&'a T as IntoIterator>::IntoIter;
+    type Item = &'a u16;
+    type IntoIter = <&'a T as IntoRegIter<'a>>::IntoIter;
     fn into_iter(self) -> Self::IntoIter {
-        (&self.data).into_iter()
+        (&self.data).into_reg_iter()
     }
 }
 
-impl<'a, T> IntoIterator for &'a mut RW<T> 
-where 
-    &'a mut T : IntoIterator<Item = &'a mut u16>
+impl<'a, T> IntoIterator for &'a mut RO<T> 
+where &'a mut T: IntoRegIterMut<'a>
 {
-    type Item = <&'a mut T as IntoIterator>::Item;
-    type IntoIter = <&'a mut T as IntoIterator>::IntoIter;
+    type Item = &'a mut u16;
+    type IntoIter = <&'a mut T as IntoRegIterMut<'a>>::IntoIter;
     fn into_iter(self) -> Self::IntoIter {
-        (&mut self.data).into_iter()
+        (&mut self.data).into_reg_iter_mut()
     }
 }
+
+// impl<T: IntoIterator<Item = u16>> IntoIterator for RW<T> {
+//     type Item = T::Item;
+//     type IntoIter = T::IntoIter;
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.data.into_iter()
+//     }
+// } 
+
+// impl<'a, T> IntoIterator for &'a RW<T> 
+// where 
+//     &'a T : IntoIterator<Item = &'a u16>
+// {
+//     type Item = <&'a T as IntoIterator>::Item;
+//     type IntoIter = <&'a T as IntoIterator>::IntoIter;
+//     fn into_iter(self) -> Self::IntoIter {
+//         (&self.data).into_iter()
+//     }
+// }
+
+// impl<'a, T> IntoIterator for &'a mut RW<T> 
+// where 
+//     &'a mut T : IntoIterator<Item = &'a mut u16>
+// {
+//     type Item = <&'a mut T as IntoIterator>::Item;
+//     type IntoIter = <&'a mut T as IntoIterator>::IntoIter;
+//     fn into_iter(self) -> Self::IntoIter {
+//         (&mut self.data).into_iter()
+//     }
+// }
 
 impl<T: Clone> Clone for RW<T> {
     fn clone(&self) -> Self {
@@ -277,11 +307,11 @@ mod register_tests {
         let reg4 = RegU64::new(0x0123456789ABCDEF);
         let reg4 = RO::new(reg4);
 
-        let iter0 = reg0.into_reg_iter();
-        let iter1 = reg1.into_reg_iter();
-        let iter2 = reg2.into_reg_iter();
-        let iter3 = reg3.into_reg_iter();
-        let iter4 = reg4.into_reg_iter();
+        let iter0 = reg0.into_iter();
+        let iter1 = reg1.into_iter();
+        let iter2 = reg2.into_iter();
+        let iter3 = reg3.into_iter();
+        let iter4 = reg4.into_iter();
 
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3).chain(iter4); 
         assert_eq!(Some(&0xFFFF), iter.next());
@@ -313,11 +343,11 @@ mod register_tests {
         let reg4 = RegU64::new(0x0123456789ABCDEF);
         let reg4 = RW::new(reg4);
 
-        let iter0 = reg0.into_reg_iter();
-        let iter1 = reg1.into_reg_iter();
-        let iter2 = reg2.into_reg_iter();
-        let iter3 = reg3.into_reg_iter();
-        let iter4 = reg4.into_reg_iter();
+        let iter0 = reg0.into_iter();
+        let iter1 = reg1.into_iter();
+        let iter2 = reg2.into_iter();
+        let iter3 = reg3.into_iter();
+        let iter4 = reg4.into_iter();
 
         let mut iter = iter0.chain(iter1).chain(iter2).chain(iter3).chain(iter4); 
         assert_eq!(Some(&0xFFFF), iter.next());

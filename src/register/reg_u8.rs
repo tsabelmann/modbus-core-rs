@@ -1,4 +1,4 @@
-use super::{ReadRegister, WriteRegister};
+use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
 
 /// Modbus register that can be converter to and from [u8].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -80,6 +80,20 @@ impl<'a> IntoIterator for &'a mut RegU8 {
     type IntoIter = core::slice::IterMut<'a, u16>;
     fn into_iter(self) -> Self::IntoIter {
         (&mut self.data).into_iter()
+    }
+}
+
+impl<'a> IntoRegIter<'a> for &'a RegU8 {
+    type IntoIter = <&'a RegU8 as IntoIterator>::IntoIter;
+    fn into_reg_iter(self) -> Self::IntoIter {
+        self.into_iter()
+    }
+}
+
+impl<'a> IntoRegIterMut<'a> for &'a mut RegU8 {
+    type IntoIter = <&'a mut RegU8 as IntoIterator>::IntoIter;
+    fn into_reg_iter_mut(self) -> Self::IntoIter {
+        self.into_iter()
     }
 }
 

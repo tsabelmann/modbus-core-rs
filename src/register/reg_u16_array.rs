@@ -1,4 +1,4 @@
-use super::{ReadRegister, WriteRegister};
+use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
 use core::{ops::{Index, IndexMut}};
 
 /// Modbus register that can be converter to and from [u16; N].
@@ -133,6 +133,20 @@ impl<'a, const N: usize> IntoIterator for &'a mut RegU16Array<N> {
     type IntoIter = core::slice::IterMut<'a, u16>;
     fn into_iter(self) -> Self::IntoIter {
         (&mut self.data).into_iter()
+    }
+}
+
+impl<'a, const N: usize> IntoRegIter<'a> for &'a RegU16Array<N>  {
+    type IntoIter = <&'a RegU16Array<N> as IntoIterator>::IntoIter;
+    fn into_reg_iter(self) -> Self::IntoIter {
+        self.into_iter()
+    }
+}
+
+impl<'a, const N: usize> IntoRegIterMut<'a> for &'a mut RegU16Array<N>  {
+    type IntoIter = <&'a mut RegU16Array<N> as IntoIterator>::IntoIter;
+    fn into_reg_iter_mut(self) -> Self::IntoIter {
+        self.into_iter()
     }
 }
 
