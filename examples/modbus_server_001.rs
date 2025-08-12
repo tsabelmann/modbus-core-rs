@@ -136,17 +136,17 @@ pub fn dispatch(starting_address: u16, quantity_of_registers: u16) -> Option<imp
     }
 
     // Beginne mit dem ersten Iterator
-    let iter = SUN_S.into_reg_iter();
+    let iter = SUN_S.into_iter();
 
-    let model_1_id_iter = MODEL_1_ID.into_reg_iter();
-    let model_1_length_iter = MODEL_1_LENGTH.into_reg_iter();
-    let model_1_manufacturer_iter = MODEL_1_MANUFACTURER.into_reg_iter();
-    let model_1_model_iter = MODEL_1_MODEL.into_reg_iter();
-    let model_1_options_iter = MODEL_1_OPTIONS.into_reg_iter();
-    let model_1_version_iter = MODEL_1_VERSION.into_reg_iter();
-    let model_1_serial_iter = MODEL_1_SERIAL.into_reg_iter();
-    let model_1_device_address_iter = MODEL_1_DEVICE_ADDRESS.into_reg_iter();
-    let model_1_pad_iter = MODEL_1_PAD.into_reg_iter();
+    let model_1_id_iter = MODEL_1_ID.into_iter();
+    let model_1_length_iter = MODEL_1_LENGTH.into_iter();
+    let model_1_manufacturer_iter = MODEL_1_MANUFACTURER.into_iter();
+    let model_1_model_iter = MODEL_1_MODEL.into_iter();
+    let model_1_options_iter = MODEL_1_OPTIONS.into_iter();
+    let model_1_version_iter = MODEL_1_VERSION.into_iter();
+    let model_1_serial_iter = MODEL_1_SERIAL.into_iter();
+    let model_1_device_address_iter = MODEL_1_DEVICE_ADDRESS.into_iter();
+    let model_1_pad_iter = MODEL_1_PAD.into_iter();
     let iter = iter
         .chain(model_1_id_iter)
         .chain(model_1_length_iter)
@@ -159,7 +159,7 @@ pub fn dispatch(starting_address: u16, quantity_of_registers: u16) -> Option<imp
         .chain(model_1_pad_iter);
 
     // Hänge den letzten an
-    let iter = iter.chain(MODEL_END.into_reg_iter()).chain(END.into_reg_iter());
+    let iter = iter.chain(MODEL_END.into_iter()).chain(END.into_iter());
     let iter = iter.skip(diff as usize).take(quantity_of_registers as usize);
 
     println!("SIZE={}", size_of_val(&iter));
