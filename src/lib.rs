@@ -28,3 +28,6 @@ pub use pdu::{PduData, PduDataMut};
 
 /// TCP/IP related types and helper functions.
 pub mod tcp;
+
+/// RTU related types and helper functions.
+pub mod rtu;
