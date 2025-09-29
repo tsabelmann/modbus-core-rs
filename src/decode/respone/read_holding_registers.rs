@@ -39,6 +39,8 @@ impl<'a, T: PduData> ReadHoldingRegistersResponseDecoder<'a, T> {
                         return Err(ReadHoldingRegistersResponseDecoderError::InvalidQuanitityOfRegisters);
                     }
 
+                    // Check checksum
+
                     Ok(ReadHoldingRegistersResponseDecoder { pdu })
                 }
                 _ => Err(ReadHoldingRegistersResponseDecoderError::InvalidFunctionCode)
@@ -50,7 +52,59 @@ impl<'a, T: PduData> ReadHoldingRegistersResponseDecoder<'a, T> {
         self.pdu.function_code()
     }
 
-    pub fn byte_count(&self) -> u16 {
-        (self.pdu.pdu_data()[1] as u16) * 2 
+    pub fn quantity_of_registers(&self) -> u8 {
+        self.pdu.pdu_data()[1]
     }
 }
+
+/* INTO ITERATOR */
+
+impl<'a, T: PduData> IntoIterator for ReadHoldingRegistersResponseDecoder<'a, T> {
+    type Item = u16;
+    type IntoIter = ReadHoldingRegistersResponseRegisterIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ReadHoldingRegistersResponseRegisterIter {
+            data: self,
+            register_index: 0
+        }
+    }
+}
+
+/* ITERATOR */
+
+pub struct ReadHoldingRegistersResponseRegisterIter<'a, T>
+where 
+    T: PduData
+{
+    data: ReadHoldingRegistersResponseDecoder<'a, T>,
+    register_index: u8
+}
+
+impl<'a, T: PduData> Iterator for ReadHoldingRegistersResponseRegisterIter<'a, T> {
+    type Item = u16;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.register_index < self.data.quantity_of_registers() {
+            let base_index = 2 + 2 * (self.register_index as usize);
+            let range = base_index..(base_index+2);
+
+            match self.data.pdu.pdu_data().get(range) {
+                Some(slice) => {
+                    // Compute iterator return value
+                    let mut value = (slice[0] as u16) << 8;
+                    value += slice[1] as u16;
+
+                    // Increment register index
+                    self.register_index += 1;
+
+                    // Return iterator value
+                    Some(value)
+                },
+                None => None,
+            }
+        } else {
+            None
+        }
+    }
+}
+
