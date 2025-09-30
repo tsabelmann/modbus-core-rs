@@ -1,3 +1,4 @@
+/// Compute checksum to verify the validity of Modbus/RTU frames.
 pub fn rtu_crc(data: &[u8]) -> u16 {
     let mut crc = 0xFFFF;
     for byte in data {
