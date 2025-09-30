@@ -102,6 +102,5 @@ impl<'a> PduDataMut for ModbusTcpFrame<'a> {
 
 #[cfg(test)]
 mod frame_tests {
-    use super::*;
 
 }
