@@ -8,6 +8,11 @@ pub struct ModbusRtuFrame<'a> {
 }
 
 impl<'a> ModbusRtuFrame<'a> {
+    pub unsafe fn new_unchecked(data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH], data_length: usize) -> ModbusRtuFrame<'a> {
+        let data_length = data_length.min(data.len());
+        ModbusRtuFrame { data, data_length }
+    }
+
     pub fn slave_address(&self) -> u8 {
         self.data[0]
     }
