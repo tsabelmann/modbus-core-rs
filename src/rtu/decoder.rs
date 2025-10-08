@@ -49,6 +49,7 @@ enum ModbusRtuFrameDecoderState {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum ModbusRtuFrameDecoderResult<'a> {
     Success(ModbusRtuFrame<'a>),
     Pending,
