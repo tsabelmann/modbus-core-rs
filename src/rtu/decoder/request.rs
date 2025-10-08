@@ -8,6 +8,33 @@ fn compute_pdu_data_length_for_request_frame(function_code: FunctionCode) -> usi
     }
 }
 
+fn compute_pdu_data_length_for_response_frame(function_kind: FunctionKind) -> usize {
+    match function_kind {
+        FunctionKind::Normal(function_code) => match function_code {
+            FunctionCode::ReadCoils => todo!(),
+            FunctionCode::ReadDiscreteInputs => todo!(),
+            FunctionCode::ReadHoldingRegisters => todo!(),
+            FunctionCode::ReadInputRegisters => todo!(),
+            FunctionCode::WriteSingleCoil => todo!(),
+            FunctionCode::WriteSingleRegister => todo!(),
+            FunctionCode::ReadExceptionStatus => todo!(),
+            FunctionCode::Diagnostic => todo!(),
+            FunctionCode::GetComEventCounter => todo!(),
+            FunctionCode::GetComEventLog => todo!(),
+            FunctionCode::WriteMultipleCoils => todo!(),
+            FunctionCode::WriteMultipleRegisters => todo!(),
+            FunctionCode::ReportServerId => todo!(),
+            FunctionCode::ReadFileRecord => todo!(),
+            FunctionCode::WriteFileRecord => todo!(),
+            FunctionCode::MaskWriteRegister => todo!(),
+            FunctionCode::ReadWriteMultipleRegisters => todo!(),
+            FunctionCode::ReadFifoQueue => todo!(),
+            FunctionCode::Unknown(_) => todo!(),
+        },
+        FunctionKind::Exception(_) => 2
+    }
+}
+
 enum ModbusRtuFrameRequestDecoderState {
     WaitForSlaveAddress,
     WaitForFunctionCode,
@@ -50,7 +77,12 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
         match &mut self.state {
             ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress => {
                 // Push data into internal storage
-                self.data[self.index] = data;
+                if let Some(ptr) = self.data.get_mut(self.index) {
+                    *ptr = data;
+                } else {
+                    self.reset();
+                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                }
 
                 // Increment index
                 self.index += 1;
@@ -60,7 +92,12 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
             },
             ModbusRtuFrameRequestDecoderState::WaitForFunctionCode => {
                 // Push data into internal storage
-                self.data[self.index] = data;
+                if let Some(ptr) = self.data.get_mut(self.index) {
+                    *ptr = data;
+                } else {
+                    self.reset();
+                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                }
 
                 // Increment index
                 self.index += 1;
@@ -76,10 +113,7 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
                     },
                     FunctionKind::Exception(_) => {
                         // Reset state 
-                        self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
-
-                        // Reset index
-                        self.index = 0;
+                        self.reset();
 
                         // Return
                         return ModbusRtuFrameRequestDecoderResult::InvalidFunctionCode;
@@ -88,7 +122,12 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
             },
             ModbusRtuFrameRequestDecoderState::CollectPduData { index, length } => {
                 // Push data into internal storage
-                self.data[self.index] = data;
+                if let Some(ptr) = self.data.get_mut(self.index) {
+                    *ptr = data;
+                } else {
+                    self.reset();
+                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                }
 
                 // Increment index
                 self.index += 1;
@@ -102,7 +141,12 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
             },
             ModbusRtuFrameRequestDecoderState::CollectCrcData { index } => {   
                 // Push data into internal storage
-                self.data[self.index] = data;
+                if let Some(ptr) = self.data.get_mut(self.index) {
+                    *ptr = data;
+                } else {
+                    self.reset();
+                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                }
 
                 // Increment index
                 self.index += 1;
