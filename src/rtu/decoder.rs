@@ -35,7 +35,9 @@ fn compute_pdu_data_length_for_response_frame(function_kind: FunctionKind) -> us
     }
 }
 
-enum ModbusRtuFrameRequestDecoderState {
+
+#[derive(Debug, PartialEq, Clone)]
+enum ModbusRtuFrameDecoderState {
     WaitForSlaveAddress,
     WaitForFunctionCode,
     CollectPduData {
@@ -47,8 +49,7 @@ enum ModbusRtuFrameRequestDecoderState {
     }
 }
 
-
-pub enum ModbusRtuFrameRequestDecoderResult<'a> {
+pub enum ModbusRtuFrameDecoderResult<'a> {
     Success(ModbusRtuFrame<'a>),
     Pending,
     CrcError,
@@ -57,46 +58,71 @@ pub enum ModbusRtuFrameRequestDecoderResult<'a> {
     NotEnoughData
 }
 
-pub struct ModbusRtuFrameRequestDecoder<'a> {
-    data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH],
-    state: ModbusRtuFrameRequestDecoderState,
-    index: usize
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
+pub enum ModbusRtuFrameDecoderDirection {
+    #[default]
+    Request,
+    Response
 }
 
-impl<'a> ModbusRtuFrameRequestDecoder<'a> {
-    pub const fn new(data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH]) -> ModbusRtuFrameRequestDecoder<'a> {
-        let decoder = ModbusRtuFrameRequestDecoder {
+pub struct ModbusRtuFrameDecoder<'a> {
+    data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH],
+    state: ModbusRtuFrameDecoderState,
+    index: usize,
+    decoder_direction: ModbusRtuFrameDecoderDirection
+}
+
+impl<'a> ModbusRtuFrameDecoder<'a> {
+    pub const fn new(data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH], decoder_direction: ModbusRtuFrameDecoderDirection) -> ModbusRtuFrameDecoder<'a> {
+        let decoder = ModbusRtuFrameDecoder {
             data,
-            state: ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress,
-            index: 0
+            state: ModbusRtuFrameDecoderState::WaitForSlaveAddress,
+            index: 0,
+            decoder_direction
         };
         decoder
     }
 
-    pub fn push_data(&mut self, data: u8) -> ModbusRtuFrameRequestDecoderResult<'_> {
+    pub const fn expect_request(&mut self) {
+        // Reset state
+        self.reset();
+
+        // Switch to request mode
+        self.decoder_direction = ModbusRtuFrameDecoderDirection::Request;
+    }
+
+    pub const fn expect_response(&mut self) {
+        // Reset state
+        self.reset();
+
+        // Switch to response mode
+        self.decoder_direction = ModbusRtuFrameDecoderDirection::Response;
+    }
+
+    pub fn push_data(&mut self, data: u8) -> ModbusRtuFrameDecoderResult<'_> {
         match &mut self.state {
-            ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress => {
+            ModbusRtuFrameDecoderState::WaitForSlaveAddress => {
                 // Push data into internal storage
                 if let Some(ptr) = self.data.get_mut(self.index) {
                     *ptr = data;
                 } else {
                     self.reset();
-                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                    return ModbusRtuFrameDecoderResult::NotEnoughData;
                 }
 
                 // Increment index
                 self.index += 1;
 
                 // Next state
-                self.state = ModbusRtuFrameRequestDecoderState::WaitForFunctionCode;
+                self.state = ModbusRtuFrameDecoderState::WaitForFunctionCode;
             },
-            ModbusRtuFrameRequestDecoderState::WaitForFunctionCode => {
+            ModbusRtuFrameDecoderState::WaitForFunctionCode => {
                 // Push data into internal storage
                 if let Some(ptr) = self.data.get_mut(self.index) {
                     *ptr = data;
                 } else {
                     self.reset();
-                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                    return ModbusRtuFrameDecoderResult::NotEnoughData;
                 }
 
                 // Increment index
@@ -109,24 +135,24 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
                 match function_kind {
                     FunctionKind::Normal(function_code) => {
                         // Next State
-                        self.state = ModbusRtuFrameRequestDecoderState::CollectPduData { index: 0, length: compute_pdu_data_length_for_request_frame(function_code) };
+                        self.state = ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: compute_pdu_data_length_for_request_frame(function_code) };
                     },
                     FunctionKind::Exception(_) => {
                         // Reset state 
                         self.reset();
 
                         // Return
-                        return ModbusRtuFrameRequestDecoderResult::InvalidFunctionCode;
+                        return ModbusRtuFrameDecoderResult::InvalidFunctionCode;
                     },
                 }
             },
-            ModbusRtuFrameRequestDecoderState::CollectPduData { index, length } => {
+            ModbusRtuFrameDecoderState::CollectPduData { index, length } => {
                 // Push data into internal storage
                 if let Some(ptr) = self.data.get_mut(self.index) {
                     *ptr = data;
                 } else {
                     self.reset();
-                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                    return ModbusRtuFrameDecoderResult::NotEnoughData;
                 }
 
                 // Increment index
@@ -136,16 +162,16 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
                 *index += 1;
                     
                 if *index >= *length  {
-                    self.state = ModbusRtuFrameRequestDecoderState::CollectCrcData { index: 0 };
+                    self.state = ModbusRtuFrameDecoderState::CollectCrcData { index: 0 };
                 }
             },
-            ModbusRtuFrameRequestDecoderState::CollectCrcData { index } => {   
+            ModbusRtuFrameDecoderState::CollectCrcData { index } => {   
                 // Push data into internal storage
                 if let Some(ptr) = self.data.get_mut(self.index) {
                     *ptr = data;
                 } else {
                     self.reset();
-                    return ModbusRtuFrameRequestDecoderResult::NotEnoughData;
+                    return ModbusRtuFrameDecoderResult::NotEnoughData;
                 }
 
                 // Increment index
@@ -162,27 +188,27 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
                         };
                         
                         // Reset state
-                        self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
+                        self.state = ModbusRtuFrameDecoderState::WaitForSlaveAddress;
                         self.index = 0;
 
                         // Success
-                        return ModbusRtuFrameRequestDecoderResult::Success(frame);
+                        return ModbusRtuFrameDecoderResult::Success(frame);
                     } else {
                         // Reset state
-                        self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
+                        self.state = ModbusRtuFrameDecoderState::WaitForSlaveAddress;
                         self.index = 0;
 
                         // CrcError
-                        return ModbusRtuFrameRequestDecoderResult::CrcError;
+                        return ModbusRtuFrameDecoderResult::CrcError;
                     }
                 }
             }
         }
-        ModbusRtuFrameRequestDecoderResult::Pending
+        ModbusRtuFrameDecoderResult::Pending
     }
 
     pub const fn reset(&mut self) {
-        self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
+        self.state = ModbusRtuFrameDecoderState::WaitForSlaveAddress;
         self.index = 0;
     }
 
@@ -196,7 +222,7 @@ mod rtu_frames_tests {
      #[test]
     fn rtu_frame_decoder_read_coils_001() {
         let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
-        let mut decoder = ModbusRtuFrameRequestDecoder::new(&mut buffer);
+        let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Request);
 
         let _ = decoder.push_data(0x04); 
         let _ = decoder.push_data(0x01);
@@ -206,7 +232,7 @@ mod rtu_frames_tests {
         let _ = decoder.push_data(0x0D);
         let _ = decoder.push_data(0xDD);
         match decoder.push_data(0x98) {
-            ModbusRtuFrameRequestDecoderResult::Success(_frame) => {
+            ModbusRtuFrameDecoderResult::Success(_frame) => {
                 assert!(true);
             },
             _ => assert!(false)
@@ -216,7 +242,7 @@ mod rtu_frames_tests {
     #[test]
     fn rtu_frame_decoder_read_holding_registers_001() {
         let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
-        let mut decoder = ModbusRtuFrameRequestDecoder::new(&mut buffer);
+        let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Request);
 
         let _ = decoder.push_data(0x01); 
         let _ = decoder.push_data(0x03);
@@ -226,7 +252,7 @@ mod rtu_frames_tests {
         let _ = decoder.push_data(0x02);
         let _ = decoder.push_data(0xC4);
         match decoder.push_data(0x0B) {
-            ModbusRtuFrameRequestDecoderResult::Success(_frame) => {
+            ModbusRtuFrameDecoderResult::Success(_frame) => {
                 assert!(true);
             },
             _ => assert!(false)
@@ -240,7 +266,7 @@ mod rtu_frames_tests {
         let _ = decoder.push_data(0x02);
         let _ = decoder.push_data(0xC4);
         match decoder.push_data(0x0B) {
-            ModbusRtuFrameRequestDecoderResult::Success(_frame) => {
+            ModbusRtuFrameDecoderResult::Success(_frame) => {
                 assert!(true);
             },
             _ => assert!(false)
