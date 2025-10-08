@@ -2,6 +2,7 @@ use crate::{FunctionKind, PduData, PduDataMut};
 use crate::constants::MODBUS_RTU_FRAME_DATA_LENGTH;
 
 
+#[derive(Debug, PartialEq)]
 pub struct ModbusRtuFrame<'a> {
     data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH],
     data_length: usize
