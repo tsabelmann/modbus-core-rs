@@ -26,7 +26,8 @@ pub enum ModbusRtuFrameRequestDecoderResult<'a> {
     Pending,
     CrcError,
     NotSupported,
-    InvalidFunctionCode
+    InvalidFunctionCode,
+    NotEnoughData
 }
 
 pub struct ModbusRtuFrameRequestDecoder<'a> {
@@ -46,7 +47,6 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
     }
 
     pub fn push_data(&mut self, data: u8) -> ModbusRtuFrameRequestDecoderResult<'_> {
-        // State
         match &mut self.state {
             ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress => {
                 // Push data into internal storage
@@ -121,16 +121,28 @@ impl<'a> ModbusRtuFrameRequestDecoder<'a> {
                         self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
                         self.index = 0;
 
+                        // Success
                         return ModbusRtuFrameRequestDecoderResult::Success(frame);
                     } else {
+                        // Reset state
+                        self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
+                        self.index = 0;
+
+                        // CrcError
                         return ModbusRtuFrameRequestDecoderResult::CrcError;
                     }
                 }
             }
         }
-
         ModbusRtuFrameRequestDecoderResult::Pending
     }
+
+    pub const fn reset(&mut self) {
+        self.state = ModbusRtuFrameRequestDecoderState::WaitForSlaveAddress;
+        self.index = 0;
+    }
+
+
 }
 
 #[cfg(test)]
