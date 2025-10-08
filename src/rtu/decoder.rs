@@ -8,38 +8,13 @@ fn compute_pdu_data_length_for_request_frame(function_code: FunctionCode) -> usi
     }
 }
 
-fn compute_pdu_data_length_for_response_frame(function_kind: FunctionKind) -> usize {
-    match function_kind {
-        FunctionKind::Normal(function_code) => match function_code {
-            FunctionCode::ReadCoils => todo!(),
-            FunctionCode::ReadDiscreteInputs => todo!(),
-            FunctionCode::ReadHoldingRegisters => todo!(),
-            FunctionCode::ReadInputRegisters => todo!(),
-            FunctionCode::WriteSingleCoil => todo!(),
-            FunctionCode::WriteSingleRegister => todo!(),
-            FunctionCode::ReadExceptionStatus => todo!(),
-            FunctionCode::Diagnostic => todo!(),
-            FunctionCode::GetComEventCounter => todo!(),
-            FunctionCode::GetComEventLog => todo!(),
-            FunctionCode::WriteMultipleCoils => todo!(),
-            FunctionCode::WriteMultipleRegisters => todo!(),
-            FunctionCode::ReportServerId => todo!(),
-            FunctionCode::ReadFileRecord => todo!(),
-            FunctionCode::WriteFileRecord => todo!(),
-            FunctionCode::MaskWriteRegister => todo!(),
-            FunctionCode::ReadWriteMultipleRegisters => todo!(),
-            FunctionCode::ReadFifoQueue => todo!(),
-            FunctionCode::Unknown(_) => todo!(),
-        },
-        FunctionKind::Exception(_) => 2
-    }
-}
-
-
 #[derive(Debug, PartialEq, Clone)]
 enum ModbusRtuFrameDecoderState {
     WaitForSlaveAddress,
     WaitForFunctionCode,
+    ReadByteCount {
+        bytes_before_byte_count: usize
+    },
     CollectPduData {
         index: usize,
         length: usize
@@ -131,21 +106,110 @@ impl<'a> ModbusRtuFrameDecoder<'a> {
 
                 // Function Code
                 let function_kind = FunctionKind::from(data);
+                
+                // Decode based on the direction
+                match self.decoder_direction {
+                    ModbusRtuFrameDecoderDirection::Request => {
+                        // Check function kind
+                        match function_kind {
+                            FunctionKind::Normal(function_code) => {
+                                // Next State
+                                self.state = match function_code {
+                                    FunctionCode::ReadCoils => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::ReadDiscreteInputs => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::ReadHoldingRegisters => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::ReadInputRegisters => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::WriteSingleCoil => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::WriteSingleRegister => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::ReadExceptionStatus => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 1 },
+                                    FunctionCode::Diagnostic => panic!("Not supported"),
+                                    FunctionCode::GetComEventCounter => ModbusRtuFrameDecoderState::CollectCrcData { index: 0 },
+                                    FunctionCode::GetComEventLog => ModbusRtuFrameDecoderState::CollectCrcData { index: 0 },
+                                    FunctionCode::WriteMultipleCoils => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 4 },
+                                    FunctionCode::WriteMultipleRegisters => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 4 },
+                                    FunctionCode::ReportServerId => ModbusRtuFrameDecoderState::CollectCrcData { index: 0 },
+                                    FunctionCode::ReadFileRecord => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::WriteFileRecord => panic!("Not supported"),
+                                    FunctionCode::MaskWriteRegister => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 6 },
+                                    FunctionCode::ReadWriteMultipleRegisters => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 8 },
+                                    FunctionCode::ReadFifoQueue => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 2 },
+                                    FunctionCode::Unknown(_) => {
+                                        // Reset
+                                        self.index = 0;
+                                        ModbusRtuFrameDecoderState::WaitForSlaveAddress
+                                    },
+                                }
+                            },
+                            FunctionKind::Exception(_) => {
+                                // Reset state 
+                                self.reset();
 
-                // Check function kind
-                match function_kind {
-                    FunctionKind::Normal(function_code) => {
-                        // Next State
-                        self.state = ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: compute_pdu_data_length_for_request_frame(function_code) };
+                                // Return
+                                return ModbusRtuFrameDecoderResult::InvalidFunctionCode;
+                            },
+                        }
                     },
-                    FunctionKind::Exception(_) => {
-                        // Reset state 
-                        self.reset();
-
-                        // Return
-                        return ModbusRtuFrameDecoderResult::InvalidFunctionCode;
+                    ModbusRtuFrameDecoderDirection::Response => {
+                        match function_kind {
+                            FunctionKind::Normal(function_code) => {
+                                // Next state
+                                self.state = match function_code {
+                                    FunctionCode::ReadCoils => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::ReadDiscreteInputs => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::ReadHoldingRegisters => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::ReadInputRegisters => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::WriteSingleCoil => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::WriteSingleRegister => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::ReadExceptionStatus => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 1 },
+                                    FunctionCode::Diagnostic => panic!("Not supported!"),
+                                    FunctionCode::GetComEventCounter => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::GetComEventLog => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::WriteMultipleCoils => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::WriteMultipleRegisters => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 4 },
+                                    FunctionCode::ReportServerId => panic!("Not supported!"),
+                                    FunctionCode::ReadFileRecord => panic!("Not supported!"),
+                                    FunctionCode::WriteFileRecord => panic!("Not supported!"),
+                                    FunctionCode::MaskWriteRegister => ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 6 },
+                                    FunctionCode::ReadWriteMultipleRegisters => ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count: 0 },
+                                    FunctionCode::ReadFifoQueue => panic!("Not supported!"),
+                                    FunctionCode::Unknown(_) => {
+                                        // Reset
+                                        self.index = 0;
+                                        ModbusRtuFrameDecoderState::WaitForSlaveAddress
+                                    },
+                                };
+                            },
+                            FunctionKind::Exception(_) => {
+                                // Next State
+                                self.state = ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: 1 };
+                            },
+                        }
                     },
                 }
+            },
+            ModbusRtuFrameDecoderState::ReadByteCount { bytes_before_byte_count } => {
+                // Push data into internal storage
+                if let Some(ptr) = self.data.get_mut(self.index) {
+                    *ptr = data;
+                } else {
+                    self.reset();
+                    return ModbusRtuFrameDecoderResult::NotEnoughData;
+                }
+
+                // Increment index
+                self.index += 1;
+
+                // Check if the next byte is the byte_count
+                if *bytes_before_byte_count == 0 {
+                    // byte count 
+                    let byte_count = data as usize;
+
+                    // Next state
+                    self.state = ModbusRtuFrameDecoderState::CollectPduData { index: 0, length: byte_count };
+                } else {
+                    // Decrement bytes before byte count
+                    *bytes_before_byte_count -= 1;
+                }           
             },
             ModbusRtuFrameDecoderState::CollectPduData { index, length } => {
                 // Push data into internal storage
@@ -220,8 +284,8 @@ impl<'a> ModbusRtuFrameDecoder<'a> {
 mod rtu_frames_tests {
     use super::*;
 
-     #[test]
-    fn rtu_frame_decoder_read_coils_001() {
+    #[test]
+    fn rtu_frame_decoder_read_coils_request_001() {
         let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
         let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Request);
 
@@ -241,7 +305,65 @@ mod rtu_frames_tests {
     }
 
     #[test]
-    fn rtu_frame_decoder_read_holding_registers_001() {
+    fn rtu_frame_decoder_read_coils_response_001() {
+        let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
+        let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Response);
+
+        let _ = decoder.push_data(0x04); 
+        let _ = decoder.push_data(0x01);
+        let _ = decoder.push_data(0x02);
+        let _ = decoder.push_data(0x0A);
+        let _ = decoder.push_data(0x11);
+        let _ = decoder.push_data(0xB3);
+        match decoder.push_data(0x50) {
+            ModbusRtuFrameDecoderResult::Success(_frame) => {
+                assert!(true);
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn rtu_frame_decoder_read_discrete_inputs_request_001() {
+        let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
+        let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Request);
+
+        let _ = decoder.push_data(0x04); 
+        let _ = decoder.push_data(0x02);
+        let _ = decoder.push_data(0x00);
+        let _ = decoder.push_data(0x0A);
+        let _ = decoder.push_data(0x00);
+        let _ = decoder.push_data(0x0D);
+        let _ = decoder.push_data(0x99);
+        match decoder.push_data(0x98) {
+            ModbusRtuFrameDecoderResult::Success(_frame) => {
+                assert!(true);
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn rtu_frame_decoder_read_discrete_inputs_response_001() {
+        let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
+        let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Response);
+
+        let _ = decoder.push_data(0x04); 
+        let _ = decoder.push_data(0x02);
+        let _ = decoder.push_data(0x02);
+        let _ = decoder.push_data(0x0A);
+        let _ = decoder.push_data(0x11);
+        let _ = decoder.push_data(0xB3);
+        match decoder.push_data(0x14) {
+            ModbusRtuFrameDecoderResult::Success(_frame) => {
+                assert!(true);
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn rtu_frame_decoder_read_holding_registers_request_001() {
         let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
         let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Request);
 
@@ -258,15 +380,22 @@ mod rtu_frames_tests {
             },
             _ => assert!(false)
         }
+    }
 
+    #[test]
+    fn rtu_frame_decoder_read_holding_registers_response_001() {
+        let mut buffer = [0u8; MODBUS_RTU_FRAME_DATA_LENGTH];
+
+        let mut decoder = ModbusRtuFrameDecoder::new(&mut buffer, ModbusRtuFrameDecoderDirection::Response);
         let _ = decoder.push_data(0x01); 
         let _ = decoder.push_data(0x03);
+        let _ = decoder.push_data(0x04);
         let _ = decoder.push_data(0x00);
+        let _ = decoder.push_data(0x06);
         let _ = decoder.push_data(0x00);
-        let _ = decoder.push_data(0x00);
-        let _ = decoder.push_data(0x02);
-        let _ = decoder.push_data(0xC4);
-        match decoder.push_data(0x0B) {
+        let _ = decoder.push_data(0x05);
+        let _ = decoder.push_data(0xDA);
+        match decoder.push_data(0x31) {
             ModbusRtuFrameDecoderResult::Success(_frame) => {
                 assert!(true);
             },
