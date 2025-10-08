@@ -1,13 +1,5 @@
 use crate::{constants::MODBUS_RTU_FRAME_DATA_LENGTH, rtu::{crc::check_rtu_crc, ModbusRtuFrame}, FunctionCode, FunctionKind};
 
-fn compute_pdu_data_length_for_request_frame(function_code: FunctionCode) -> usize {
-    match function_code {
-        FunctionCode::ReadHoldingRegisters => 4,
-        FunctionCode::ReadCoils => 4,
-        _ => 0
-    }
-}
-
 #[derive(Debug, PartialEq, Clone)]
 enum ModbusRtuFrameDecoderState {
     WaitForSlaveAddress,
