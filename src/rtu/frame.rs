@@ -18,6 +18,10 @@ impl<'a> ModbusRtuFrame<'a> {
         self.data[0]
     }
 
+    pub fn slave_address_mut(&mut self, slave_address: u8) {
+        self.data[0] = slave_address;
+    }
+
     pub fn checksum(&self) -> u16 {
         let data = [
             self.data[self.data_length-2],
