@@ -2,7 +2,7 @@ mod crc;
 pub use crc::{rtu_crc, check_rtu_crc};
 
 mod decoder;
-pub use decoder::{ModbusRtuFrameDecoder, ModbusRtuFrameDecoderResult};
+pub use decoder::{ModbusRtuFrameDecoder, ModbusRtuFrameDecoderDirection, ModbusRtuFrameDecoderResult};
 
 mod frame;
 pub use frame::ModbusRtuFrame;
