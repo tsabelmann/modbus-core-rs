@@ -31,6 +31,11 @@ impl<'a> ReadInputRegistersRequestEncoder for ModbusRtuFrame<'a> {
                 return ReadInputRegistersRequestEncodeError::InvalidQuantityOfRegisters;
             }
 
+            // Encode function code
+            let function_kind = FunctionKind::Normal(FunctionCode::ReadInputRegisters);
+            let function_kind = u8::from(function_kind);
+            self.data[1] = function_kind;
+
             // Encode Starting Address
             let bytes = start_address.to_be_bytes();
             self.data[2] = bytes[0];
