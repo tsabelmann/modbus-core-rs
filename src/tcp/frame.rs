@@ -1,4 +1,4 @@
-use crate::{FunctionKind, PduData, PduDataMut};
+use crate::{FunctionKind, AduData, PduData, PduDataMut};
 use crate::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 
 pub(crate) struct ValidModbusTcpFrame<'a> {
@@ -64,6 +64,20 @@ impl<'a> ModbusTcpFrame<'a> {
     }
 }
 
+/* ADU DATA */
+
+impl<'a> AduData for ModbusTcpFrame<'a> {
+    fn adu_data(&self) -> & [u8] {
+        &self.data[..self.data_length]
+    }
+
+    fn adu_length(&self) -> usize {
+        self.data_length
+    }
+}
+
+/* PDU DATA */
+
 impl<'a> PduData for ModbusTcpFrame<'a> {
     fn pdu_data(&self) -> & [u8] {
         &self.data[7..self.data_length]
@@ -77,6 +91,8 @@ impl<'a> PduData for ModbusTcpFrame<'a> {
         Some(self.length())
     }
 }
+
+/* PDU DATA MUT */
 
 impl<'a> PduDataMut for ModbusTcpFrame<'a> {
     fn pdu_data_mut(&mut self) -> &mut [u8] {
