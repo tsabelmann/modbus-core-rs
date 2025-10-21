@@ -17,7 +17,7 @@ pub enum ReadInputRegistersResponseDecoderError {
 
 impl<'a, T: PduData> ReadInputRegistersResponseDecoder<'a, T> {
     pub fn new(pdu: &'a T) -> Result<ReadInputRegistersResponseDecoder<'a, T>, ReadInputRegistersResponseDecoderError> {
-        let required_length = 4;
+        let required_length = 2;
         if pdu.pdu_data().len() < required_length {
             Err(ReadInputRegistersResponseDecoderError::NotEnoughData)
         } else {
