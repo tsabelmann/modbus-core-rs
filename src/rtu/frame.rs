@@ -1,4 +1,4 @@
-use crate::{FunctionKind, PduData, PduDataMut};
+use crate::{FunctionKind, AduData, PduData, PduDataMut};
 use crate::constants::MODBUS_RTU_FRAME_DATA_LENGTH;
 
 
@@ -32,6 +32,20 @@ impl<'a> ModbusRtuFrame<'a> {
     }
 }
 
+/* ADU DATA */
+
+impl<'a> AduData for ModbusRtuFrame<'a> {
+    fn adu_data(&self) -> & [u8] {
+        &self.data[..self.data_length]
+    }
+
+    fn adu_length(&self) -> usize {
+        self.data_length
+    }
+}
+
+/* PDU DATA */
+
 impl<'a> PduData for ModbusRtuFrame<'a> {
     fn pdu_data(&self) -> & [u8] {
         let end_index: usize = self.data_length - 2;
@@ -46,6 +60,8 @@ impl<'a> PduData for ModbusRtuFrame<'a> {
         None
     }
 }
+
+/* PDU DATA MUT */
 
 impl<'a> PduDataMut for ModbusRtuFrame<'a> {
     fn pdu_data_mut(&mut self) -> &mut [u8] {
