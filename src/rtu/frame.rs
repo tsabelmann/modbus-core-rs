@@ -4,8 +4,8 @@ use crate::constants::MODBUS_RTU_FRAME_DATA_LENGTH;
 
 #[derive(Debug, PartialEq)]
 pub struct ModbusRtuFrame<'a> {
-    data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH],
-    data_length: usize
+    pub(crate) data: &'a mut [u8; MODBUS_RTU_FRAME_DATA_LENGTH],
+    pub(crate) data_length: usize
 }
 
 impl<'a> ModbusRtuFrame<'a> {
