@@ -22,6 +22,10 @@ pub use codes::{FunctionCode, FunctionKind};
 mod exception;
 pub use exception::ExceptionCode;
 
+/// ADU related types.
+mod adu;
+pub use adu::AduData;
+
 /// PDU related types.
 mod pdu;
 pub use pdu::{PduData, PduDataMut};
