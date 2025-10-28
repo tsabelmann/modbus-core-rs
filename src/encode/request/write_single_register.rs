@@ -3,14 +3,14 @@ use crate::rtu::{ModbusRtuFrame, rtu_crc};
 
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum WriteSingleRegistersRequestEncodeError {
+pub enum WriteSingleRegisterRequestEncodeError {
     Succes,
     NotEnoughData
 }
 
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum WriteSingleRegistersRequestEncodeExceptionError {
+pub enum WriteSingleRegisterRequestEncodeExceptionError {
     Success,
     NotEnoughData,
     InvalidExceptionCode
@@ -18,13 +18,13 @@ pub enum WriteSingleRegistersRequestEncodeExceptionError {
 
 /* MODBUS RTU */
 
-pub trait WriteSingleRegistersRequestEncoder {
-    fn encode(&mut self, register_address: u16, register_value: u16) -> WriteSingleRegistersRequestEncodeError;
-    fn encode_exception(&mut self, code: ExceptionCode) -> WriteSingleRegistersRequestEncodeExceptionError;
+pub trait WriteSingleRegisterRequestEncoder {
+    fn encode(&mut self, register_address: u16, register_value: u16) -> WriteSingleRegisterRequestEncodeError;
+    fn encode_exception(&mut self, code: ExceptionCode) -> WriteSingleRegisterRequestEncodeExceptionError;
 }
 
-impl<'a> WriteSingleRegistersRequestEncoder for ModbusRtuFrame<'a> {
-    fn encode(&mut self, register_address: u16, register_value: u16) -> WriteSingleRegistersRequestEncodeError {
+impl<'a> WriteSingleRegisterRequestEncoder for ModbusRtuFrame<'a> {
+    fn encode(&mut self, register_address: u16, register_value: u16) -> WriteSingleRegisterRequestEncodeError {
         if self.data.len() >= 8 {
             // Encode function code
             let function_kind = FunctionKind::Normal(FunctionCode::WriteSingleRegister);
@@ -50,13 +50,13 @@ impl<'a> WriteSingleRegistersRequestEncoder for ModbusRtuFrame<'a> {
             // Update data length
             self.data_length = 8;
         } else {
-            return WriteSingleRegistersRequestEncodeError::NotEnoughData;
+            return WriteSingleRegisterRequestEncodeError::NotEnoughData;
         }
 
-        WriteSingleRegistersRequestEncodeError::Succes
+        WriteSingleRegisterRequestEncodeError::Succes
     }
 
-    fn encode_exception(&mut self, code: ExceptionCode) -> WriteSingleRegistersRequestEncodeExceptionError {
+    fn encode_exception(&mut self, code: ExceptionCode) -> WriteSingleRegisterRequestEncodeExceptionError {
         if self.data.len() >= 5 {
             // Update function code (error code)
             let function_code = FunctionKind::Exception(FunctionCode::WriteSingleRegister);
@@ -69,15 +69,15 @@ impl<'a> WriteSingleRegistersRequestEncoder for ModbusRtuFrame<'a> {
                 ExceptionCode::IllegalDataAddress => ExceptionCode::IllegalDataAddress.into(),
                 ExceptionCode::IllegalDataValue => ExceptionCode::IllegalDataValue.into(),
                 ExceptionCode::ServerDeviceFailure => ExceptionCode::ServerDeviceFailure.into(),
-                _ => return WriteSingleRegistersRequestEncodeExceptionError::InvalidExceptionCode
+                _ => return WriteSingleRegisterRequestEncodeExceptionError::InvalidExceptionCode
             };
 
             // Set data length
             self.data_length = 5;
         } else {
-            return WriteSingleRegistersRequestEncodeExceptionError::NotEnoughData;
+            return WriteSingleRegisterRequestEncodeExceptionError::NotEnoughData;
         }
 
-        WriteSingleRegistersRequestEncodeExceptionError::Success
+        WriteSingleRegisterRequestEncodeExceptionError::Success
     }
 }
