@@ -76,6 +76,9 @@ impl<'a> ReadInputRegistersRequestEncoder for ModbusRtuFrame<'a> {
                 ExceptionCode::ServerDeviceFailure => 0x04,
                 _ => return ReadInputRegistersRequestEncodeExceptionError::InvalidExceptionCode
             };
+
+            // Update data length
+            self.data_length = 5;
         } else {
             return ReadInputRegistersRequestEncodeExceptionError::NotEnoughData;
         }
