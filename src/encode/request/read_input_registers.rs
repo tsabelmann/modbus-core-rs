@@ -70,10 +70,10 @@ impl<'a> ReadInputRegistersRequestEncoder for ModbusRtuFrame<'a> {
 
             // Set exeception code
             self.data[2] = match code {
-                ExceptionCode::IllegalFunction => 0x01,
-                ExceptionCode::IllegalDataAddress => 0x02,
-                ExceptionCode::IllegalDataValue => 0x03,
-                ExceptionCode::ServerDeviceFailure => 0x04,
+                ExceptionCode::IllegalFunction => ExceptionCode::IllegalFunction.into(),
+                ExceptionCode::IllegalDataAddress => ExceptionCode::IllegalDataAddress.into(),
+                ExceptionCode::IllegalDataValue => ExceptionCode::IllegalDataValue.into(),
+                ExceptionCode::ServerDeviceFailure => ExceptionCode::ServerDeviceFailure.into(),
                 _ => return ReadInputRegistersRequestEncodeExceptionError::InvalidExceptionCode
             };
 
