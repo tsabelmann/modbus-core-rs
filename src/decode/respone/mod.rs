@@ -5,3 +5,4 @@ mod read_input_registers;
 pub use read_input_registers::{ReadInputRegistersResponseDecoder, ReadInputRegistersResponseDecoderError, ReadInputRegistersResponseRegisterIter};
 
 mod write_single_register;
+pub use write_single_register::{WriteSingleRegisterReponseDecoder, WriteSingleRegisterReponseDecoderError};
