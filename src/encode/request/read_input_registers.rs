@@ -26,7 +26,7 @@ pub trait ReadInputRegistersRequestEncoder
 
 impl<'a> ReadInputRegistersRequestEncoder for ModbusRtuFrame<'a> {
     fn encode(&mut self, start_address: u16, quantity_of_registers: u16) -> ReadInputRegistersRequestEncodeError {
-        if self.data.len() > 8 {
+        if self.data.len() >= 8 {
             if quantity_of_registers == 0 || quantity_of_registers > 0x007D {
                 return ReadInputRegistersRequestEncodeError::InvalidQuantityOfRegisters;
             }
@@ -62,7 +62,7 @@ impl<'a> ReadInputRegistersRequestEncoder for ModbusRtuFrame<'a> {
     }
 
     fn encode_exception(&mut self, code: ExceptionCode) -> ReadInputRegistersRequestEncodeExceptionError {    
-        if self.data.len() > 5 {
+        if self.data.len() >= 5 {
             // Update function code (error code)
             let function_code = FunctionKind::Exception(FunctionCode::ReadInputRegisters);
             let function_code = u8::from(function_code);
