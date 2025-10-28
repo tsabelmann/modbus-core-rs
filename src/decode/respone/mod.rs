@@ -3,3 +3,5 @@ pub use read_holding_registers::{ReadHoldingRegistersResponseDecoder, ReadHoldin
 
 mod read_input_registers;
 pub use read_input_registers::{ReadInputRegistersResponseDecoder, ReadInputRegistersResponseDecoderError, ReadInputRegistersResponseRegisterIter};
+
+mod write_single_register;
