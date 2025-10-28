@@ -72,6 +72,8 @@ impl<'a> WriteSingleRegistersRequestEncoder for ModbusRtuFrame<'a> {
                 _ => return WriteSingleRegistersRequestEncodeExceptionError::InvalidExceptionCode
             };
 
+            // Set data length
+            self.data_length = 5;
         } else {
             return WriteSingleRegistersRequestEncodeExceptionError::NotEnoughData;
         }
