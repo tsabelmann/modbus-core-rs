@@ -1,3 +1,5 @@
+pub mod atomic;
+
 mod reg_bool;
 pub use reg_bool::{RegBool};
 
@@ -77,6 +79,26 @@ pub trait WriteRegister<T> {
 pub trait ReadRegister<T> {
     fn read(self) -> T;
 }
+
+/// Mögliche Fehler bei Register-Operationen
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RegisterError {
+    /// Offset außerhalb des gültigen Bereichs
+    OutOfBounds { offset: usize },
+    /// Register ist nicht lesbar/schreibbar
+    AccessDenied
+}
+
+pub type RegisterResult<T> = Result<T, RegisterError>;
+
+pub trait ReadRegisterData {
+    const SIZE: usize;
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize>;
+}
+
+pub trait WriteRegisterData: ReadRegisterData {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize>;
+}   
 
 /// Read-only register enforced by the type system.
 #[derive(Debug)]
