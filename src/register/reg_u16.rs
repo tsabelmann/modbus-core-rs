@@ -1,4 +1,5 @@
 use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
+use super::{ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
 /// Modbus register that can be converter to and from [u16].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -47,6 +48,8 @@ impl From<&RegU16> for u16 {
     }
 }
 
+/* Register Iterator */
+
 impl IntoIterator for RegU16 {
     type Item = u16;
     type IntoIter = core::array::IntoIter<u16, 1>;
@@ -85,6 +88,8 @@ impl<'a> IntoRegIterMut<'a> for &'a mut RegU16 {
     }
 }
 
+/* Write/Read Register */
+
 impl WriteRegister<u16> for RegU16 {
     fn write(&mut self, value: u16) {
         *self = RegU16::from(value);
@@ -100,6 +105,50 @@ impl<'a> ReadRegister<u16> for &'a RegU16 {
 impl<'a> ReadRegister<&'a u16> for &'a RegU16 {
     fn read(self) -> &'a u16 {
         &self.data[0]
+    }
+}
+
+/* ReadRegisterData */
+
+impl ReadRegisterData for RegU16 {
+    const SIZE: usize = 1;
+
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        match offset {
+            0 => {
+                match buf.len() {
+                    0 => Ok(0),
+                    _ => {
+                        buf[0] = self.data[0];
+                        Ok(1)
+                    }
+                }
+            },
+            _ => {
+                RegisterResult::Err(RegisterError::OutOfBounds { offset })
+            }
+        }
+    }
+}
+
+/* WriteRegisterData */
+
+impl WriteRegisterData for RegU16 {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        match offset {
+            0 => {
+                match buf.len() {
+                    0 => Ok(0),
+                    _ => {
+                        self.data[0] = buf[0];
+                        Ok(1)
+                    }
+                }
+            },
+            _ => {
+                RegisterResult::Err(RegisterError::OutOfBounds { offset })
+            }
+        }
     }
 }
 
