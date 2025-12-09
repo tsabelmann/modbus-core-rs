@@ -138,9 +138,6 @@ impl WriteRegisterData for RegU32 {
     }
 }
 
-
-
-
 #[cfg(test)]
 mod reg_u32_tests {
     use crate::register::{IntoRegIter, IntoRegIterMut};
