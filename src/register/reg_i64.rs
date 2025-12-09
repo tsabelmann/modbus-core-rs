@@ -1,4 +1,5 @@
 use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
+use super::{RegisterData, ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
 /// Modbus register that can be converter to and from [i64].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -102,6 +103,44 @@ impl<'a> IntoRegIterMut<'a> for &'a mut RegI64 {
     type IntoIter = <&'a mut RegI64 as IntoIterator>::IntoIter;
     fn into_reg_iter_mut(self) -> Self::IntoIter {
         self.into_iter()
+    }
+}
+
+/* RegisterData */
+
+impl RegisterData for RegI64 {
+    const COUNT: usize = 4;
+}
+
+/* ReadRegisterData */
+
+impl ReadRegisterData for RegI64 {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        if offset >= Self::COUNT {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = Self::COUNT - offset;
+        let to_read = buf.len().min(available);
+
+        buf[..to_read].copy_from_slice(&self.data[offset..offset + to_read]);
+        Ok(to_read)
+    }
+}
+
+/* WriteRegisterData */
+
+impl WriteRegisterData for RegI64 {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        if offset >= Self::COUNT {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = Self::COUNT - offset;
+        let to_write = buf.len().min(available);
+
+        self.data[offset..offset + to_write].copy_from_slice(&buf[..to_write]);
+        Ok(to_write)
     }
 }
 
