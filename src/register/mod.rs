@@ -183,6 +183,16 @@ where
     }
 }
 
+impl<T: RegisterData> RegisterData for RO<T> {
+    const COUNT: usize = T::COUNT;
+}
+
+impl<T: ReadRegisterData> ReadRegisterData for RO<T> {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        self.data.read(offset, buf)
+    }
+}
+
 /// Read and writable register.
 #[derive(Debug)]
 pub struct RW<T> {
@@ -280,6 +290,22 @@ where
 {
     fn write(&mut self, value: U) {
         self.data.write(value);    
+    }
+}
+
+impl<T: RegisterData> RegisterData for RW<T> {
+    const COUNT: usize = T::COUNT;
+}
+
+impl<T: ReadRegisterData> ReadRegisterData for RW<T> {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        self.data.read(offset, buf)
+    }
+}
+
+impl<T: WriteRegisterData> WriteRegisterData for RW<T> {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        self.data.write(offset, buf)
     }
 }
 
