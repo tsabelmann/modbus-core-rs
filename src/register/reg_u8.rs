@@ -1,4 +1,5 @@
 use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
+use super::{RegisterData, ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
 /// Modbus register that can be converter to and from [u8].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -94,6 +95,54 @@ impl<'a> IntoRegIterMut<'a> for &'a mut RegU8 {
     type IntoIter = <&'a mut RegU8 as IntoIterator>::IntoIter;
     fn into_reg_iter_mut(self) -> Self::IntoIter {
         self.into_iter()
+    }
+}
+
+/* RegisterData */
+
+impl RegisterData for RegU8 {
+    const COUNT: usize = 1;
+}
+
+/* ReadRegisterData */
+
+impl ReadRegisterData for RegU8 {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        match offset {
+            0 => {
+                match buf.len() {
+                    0 => Ok(0),
+                    _ => {
+                        buf[0] = self.data[0];
+                        Ok(1)
+                    }
+                }
+            },
+            _ => {
+                RegisterResult::Err(RegisterError::OutOfBounds { offset })
+            }
+        }
+    }
+}
+
+/* WriteRegisterData */
+
+impl WriteRegisterData for RegU8 {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        match offset {
+            0 => {
+                match buf.len() {
+                    0 => Ok(0),
+                    _ => {
+                        self.data[0] = buf[0] & 0x00FF;
+                        Ok(1)
+                    }
+                }
+            },
+            _ => {
+                RegisterResult::Err(RegisterError::OutOfBounds { offset })
+            }
+        }
     }
 }
 
