@@ -91,12 +91,15 @@ pub enum RegisterError {
 
 pub type RegisterResult<T> = Result<T, RegisterError>;
 
-pub trait ReadRegisterData {
-    const SIZE: usize;
+pub trait RegisterData {
+    const COUNT: usize;
+}
+
+pub trait ReadRegisterData: RegisterData {
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize>;
 }
 
-pub trait WriteRegisterData: ReadRegisterData {
+pub trait WriteRegisterData: RegisterData {
     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize>;
 }   
 
