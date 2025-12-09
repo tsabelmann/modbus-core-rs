@@ -56,17 +56,17 @@ impl<'a> ReadRegisterData for AtomicRegU8Ref<'a> {
     }
 }
 
-/* WriteRegisterData */
+// /* WriteRegisterData */
 
-impl WriteRegisterData for AtomicRegU8 {
-    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
-        let mut reff = AtomicRegU8Ref::new(&self.value);
-        reff.write(offset, buf)
-    }
-}
+// impl WriteRegisterData for AtomicRegU8 {
+//     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+//         let mut reff = AtomicRegU8Ref::new(&self.value);
+//         reff.write(offset, buf)
+//     }
+// }
 
-impl<'a> WriteRegisterData for AtomicRegU8Ref<'a> {
-    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
-        Ok(0)
-    }
-}
+// impl<'a> WriteRegisterData for AtomicRegU8Ref<'a> {
+//     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+//         Ok(0)
+//     }
+// }
