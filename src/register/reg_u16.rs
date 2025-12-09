@@ -1,5 +1,5 @@
 use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
-use super::{ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
+use super::{RegisterData, ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
 /// Modbus register that can be converter to and from [u16].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -108,11 +108,15 @@ impl<'a> ReadRegister<&'a u16> for &'a RegU16 {
     }
 }
 
+/* RegisterData */
+
+impl RegisterData for RegU16 {
+    const COUNT: usize = 1;
+}
+
 /* ReadRegisterData */
 
 impl ReadRegisterData for RegU16 {
-    const SIZE: usize = 1;
-
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
         match offset {
             0 => {
