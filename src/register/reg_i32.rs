@@ -1,4 +1,5 @@
 use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
+use super::{RegisterData, ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
 /// Modbus register that can be converter to and from [u8].
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -94,6 +95,44 @@ impl WriteRegister<i32> for RegI32 {
 impl<'a> ReadRegister<i32> for &'a RegI32 {
     fn read(self) -> i32 {
         i32::from(self)
+    }
+}
+
+/* RegisterData */
+
+impl RegisterData for RegI32 {
+    const COUNT: usize = 2;
+}
+
+/* ReadRegisterData */
+
+impl ReadRegisterData for RegI32 {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        if offset >= Self::COUNT {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = Self::COUNT - offset;
+        let to_read = buf.len().min(available);
+
+        buf[..to_read].copy_from_slice(&self.data[offset..offset + to_read]);
+        Ok(to_read)
+    }
+}
+
+/* WriteRegisterData */
+
+impl WriteRegisterData for RegI32 {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        if offset >= Self::COUNT {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = Self::COUNT - offset;
+        let to_write = buf.len().min(available);
+
+        self.data[offset..offset + to_write].copy_from_slice(&buf[..to_write]);
+        Ok(to_write)
     }
 }
 
