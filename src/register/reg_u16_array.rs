@@ -1,5 +1,6 @@
 use super::{ReadRegister, WriteRegister, IntoRegIter, IntoRegIterMut};
 use core::{ops::{Index, IndexMut}};
+use super::{RegisterData, ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
 /// Modbus register that can be converter to and from [u16; N].
 #[derive(Debug, PartialEq, Clone)]
@@ -150,6 +151,8 @@ impl<'a, const N: usize> IntoRegIterMut<'a> for &'a mut RegU16Array<N>  {
     }
 }
 
+/* Write/Read Regiser */
+
 impl<const N: usize> WriteRegister<[u16; N]> for RegU16Array<N> {
     fn write(&mut self, value: [u16; N]) {
         *self = RegU16Array::from(value);
@@ -165,6 +168,44 @@ impl<'a, const N: usize> ReadRegister<[u16; N]> for &'a RegU16Array<N> {
 impl<'a, const N: usize> ReadRegister<&'a [u16]> for &'a RegU16Array<N> {
     fn read(self) -> &'a [u16] {
         &self.data
+    }
+}
+
+/* RegisterData */
+
+impl<const N: usize> RegisterData for RegU16Array<N> {
+    const COUNT: usize = N;
+}
+
+/* ReadRegisterData */
+
+impl<const N: usize> ReadRegisterData for RegU16Array<N> {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        if offset >= Self::COUNT {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = Self::COUNT - offset;
+        let to_read = buf.len().min(available);
+
+        buf[..to_read].copy_from_slice(&self.data[offset..offset + to_read]);
+        Ok(to_read)
+    }
+}
+
+/* WriteRegisterData */
+
+impl<const N: usize> WriteRegisterData for RegU16Array<N> {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        if offset >= Self::COUNT {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = Self::COUNT - offset;
+        let to_write = buf.len().min(available);
+
+        self.data[offset..offset + to_write].copy_from_slice(&buf[..to_write]);
+        Ok(to_write)
     }
 }
 
