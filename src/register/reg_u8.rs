@@ -113,7 +113,7 @@ impl ReadRegisterData for RegU8 {
                 match buf.len() {
                     0 => Ok(0),
                     _ => {
-                        buf[0] = self.data[0];
+                        buf[0] = self.data[0] & 0x00FF;
                         Ok(1)
                     }
                 }
