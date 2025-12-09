@@ -1,46 +1,46 @@
 use core::sync::atomic::{AtomicU8, Ordering};
 use crate::register::{RegisterData, ReadRegisterData, WriteRegisterData, RegisterResult, RegisterError};
 
-pub struct RegAtomicU8 {
+pub struct AtomicRegU8 {
     value: AtomicU8
 }
 
-impl<'a> RegAtomicU8 {
-    pub const fn new(value: u8) -> RegAtomicU8 {
-        RegAtomicU8 { value: AtomicU8::new(value) }
+impl<'a> AtomicRegU8 {
+    pub const fn new(value: u8) -> AtomicRegU8 {
+        AtomicRegU8 { value: AtomicU8::new(value) }
     }
 }
 
-pub struct RegAtomicU8Ref<'a> {
+pub struct AtomicRegU8Ref<'a> {
     value: &'a AtomicU8
 }
 
-impl<'a> RegAtomicU8Ref<'a> {
-    pub const fn new(value: &'a AtomicU8) -> RegAtomicU8Ref<'a> {
-        RegAtomicU8Ref { value }
+impl<'a> AtomicRegU8Ref<'a> {
+    pub const fn new(value: &'a AtomicU8) -> AtomicRegU8Ref<'a> {
+        AtomicRegU8Ref { value }
     }
 }
 
 /* RegisterData */
 
-impl RegisterData for RegAtomicU8 {
+impl RegisterData for AtomicRegU8 {
     const COUNT: usize = 1;
 }
 
-impl<'a> RegisterData for RegAtomicU8Ref<'a> {
+impl<'a> RegisterData for AtomicRegU8Ref<'a> {
     const COUNT: usize = 1;
 }
 
 /* ReadRegisterData */
 
-impl ReadRegisterData for RegAtomicU8 {
+impl ReadRegisterData for AtomicRegU8 {
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
-        let reff = RegAtomicU8Ref::new(&self.value);
+        let reff = AtomicRegU8Ref::new(&self.value);
         reff.read(offset, buf)
     }
 }
 
-impl<'a> ReadRegisterData for RegAtomicU8Ref<'a> {
+impl<'a> ReadRegisterData for AtomicRegU8Ref<'a> {
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
         if offset >= Self::COUNT {
             return Err(RegisterError::OutOfBounds { offset });
@@ -58,14 +58,14 @@ impl<'a> ReadRegisterData for RegAtomicU8Ref<'a> {
 
 /* WriteRegisterData */
 
-impl WriteRegisterData for RegAtomicU8 {
+impl WriteRegisterData for AtomicRegU8 {
     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
-        let mut reff = RegAtomicU8Ref::new(&self.value);
+        let mut reff = AtomicRegU8Ref::new(&self.value);
         reff.write(offset, buf)
     }
 }
 
-impl<'a> WriteRegisterData for RegAtomicU8Ref<'a> {
+impl<'a> WriteRegisterData for AtomicRegU8Ref<'a> {
     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
         Ok(0)
     }

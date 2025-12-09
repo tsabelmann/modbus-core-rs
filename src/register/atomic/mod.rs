@@ -1,5 +1,5 @@
 mod reg_u8;
-pub use reg_u8::{RegAtomicU8, RegAtomicU8Ref};
+pub use reg_u8::{AtomicRegU8, AtomicRegU8Ref};
 
 // use core::sync::atomic::AtomicU32;
 // use core::sync::atomic::Ordering;
