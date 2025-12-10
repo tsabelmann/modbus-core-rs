@@ -83,10 +83,13 @@ pub trait ReadRegister<T> {
 /// Mögliche Fehler bei Register-Operationen
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RegisterError {
-    /// Offset außerhalb des gültigen Bereichs
+    /// Offset out of bounds
     OutOfBounds { offset: usize },
-    /// Register ist nicht lesbar/schreibbar
-    AccessDenied
+    /// Register is not readable/writable
+    AccessDenied,
+    /// Read/Write would exceed the maximum allowed offset.
+    /// Should **not** be implemented for basic registers.
+    Overflow
 }
 
 pub type RegisterResult<T> = Result<T, RegisterError>;
