@@ -101,7 +101,9 @@ impl<'a> IntoRegIterMut<'a> for &'a mut RegU8 {
 /* RegisterData */
 
 impl RegisterData for RegU8 {
-    const COUNT: usize = 1;
+    fn register_span(&self) -> usize {
+        1
+    }
 }
 
 /* ReadRegisterData */

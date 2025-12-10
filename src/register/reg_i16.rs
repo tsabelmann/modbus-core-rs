@@ -101,7 +101,9 @@ impl<'a> ReadRegister<i16> for &'a RegI16 {
 /* RegisterData */
 
 impl RegisterData for RegI16 {
-    const COUNT: usize = 1;
+    fn register_span(&self) -> usize {
+        1
+    }
 }
 
 /* ReadRegisterData */
@@ -145,7 +147,6 @@ impl WriteRegisterData for RegI16 {
         }
     }
 }
-
 
 #[cfg(test)]
 mod reg_i16_tests {

@@ -103,18 +103,20 @@ impl<'a> ReadRegister<u32> for &'a RegU32 {
 /* RegisterData */
 
 impl RegisterData for RegU32 {
-    const COUNT: usize = 2;
+    fn register_span(&self) -> usize {
+        2
+    }
 }
 
 /* ReadRegisterData */
 
 impl ReadRegisterData for RegU32 {
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
-        if offset >= Self::COUNT {
+        if offset >= self.register_span() {
             return Err(RegisterError::OutOfBounds { offset });
         }
 
-        let available = Self::COUNT - offset;
+        let available = self.register_span() - offset;
         let to_read = buf.len().min(available);
 
         buf[..to_read].copy_from_slice(&self.data[offset..offset + to_read]);
@@ -126,11 +128,11 @@ impl ReadRegisterData for RegU32 {
 
 impl WriteRegisterData for RegU32 {
     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
-        if offset >= Self::COUNT {
+        if offset >= self.register_span() {
             return Err(RegisterError::OutOfBounds { offset });
         }
 
-        let available = Self::COUNT - offset;
+        let available = self.register_span() - offset;
         let to_write = buf.len().min(available);
 
         self.data[offset..offset + to_write].copy_from_slice(&buf[..to_write]);

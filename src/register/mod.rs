@@ -92,7 +92,9 @@ pub enum RegisterError {
 pub type RegisterResult<T> = Result<T, RegisterError>;
 
 pub trait RegisterData {
-    const COUNT: usize;
+    /// Retrieves the maximum register span, including holes
+    /// that are not accessible. 
+    fn register_span(&self) -> usize;
 }
 
 pub trait ReadRegisterData: RegisterData {
@@ -184,7 +186,9 @@ where
 }
 
 impl<T: RegisterData> RegisterData for RO<T> {
-    const COUNT: usize = T::COUNT;
+    fn register_span(&self) -> usize {
+        self.data.register_span()
+    }
 }
 
 impl<T: ReadRegisterData> ReadRegisterData for RO<T> {
@@ -294,7 +298,9 @@ where
 }
 
 impl<T: RegisterData> RegisterData for RW<T> {
-    const COUNT: usize = T::COUNT;
+    fn register_span(&self) -> usize {
+        self.data.register_span()
+    }
 }
 
 impl<T: ReadRegisterData> ReadRegisterData for RW<T> {

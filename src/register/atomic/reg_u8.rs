@@ -24,11 +24,15 @@ impl<'a> AtomicRegU8Ref<'a> {
 /* RegisterData */
 
 impl RegisterData for AtomicRegU8 {
-    const COUNT: usize = 1;
+    fn register_span(&self) -> usize {
+        1
+    }
 }
 
 impl<'a> RegisterData for AtomicRegU8Ref<'a> {
-    const COUNT: usize = 1;
+    fn register_span(&self) -> usize {
+        1
+    }
 }
 
 /* ReadRegisterData */
@@ -42,13 +46,13 @@ impl ReadRegisterData for AtomicRegU8 {
 
 impl<'a> ReadRegisterData for AtomicRegU8Ref<'a> {
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
-        if offset >= Self::COUNT {
+        if offset >= self.register_span() {
             return Err(RegisterError::OutOfBounds { offset });
         }
 
         let data = self.value.load(Ordering::Acquire);
         let data = [data as u16];
-        let available = Self::COUNT - offset;
+        let available = self.register_span() - offset;
         let to_read = buf.len().min(available);
 
         buf[..to_read].copy_from_slice(&data[offset..offset + to_read]);

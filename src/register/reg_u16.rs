@@ -111,7 +111,9 @@ impl<'a> ReadRegister<&'a u16> for &'a RegU16 {
 /* RegisterData */
 
 impl RegisterData for RegU16 {
-    const COUNT: usize = 1;
+    fn register_span(&self) -> usize {
+        1
+    }
 }
 
 /* ReadRegisterData */

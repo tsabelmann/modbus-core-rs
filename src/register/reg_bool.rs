@@ -109,7 +109,9 @@ impl<'a> ReadRegister<bool> for &'a RegBool {
 /* RegisterData */
 
 impl RegisterData for RegBool {
-    const COUNT: usize = 1;
+    fn register_span(&self) -> usize {
+        1
+    }
 }
 
 /* ReadRegisterData */
