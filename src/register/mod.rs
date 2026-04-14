@@ -108,6 +108,29 @@ pub trait WriteRegisterData: RegisterData {
     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize>;
 }   
 
+impl RegisterData for &[u16] {
+    fn register_span(&self) -> usize {
+        self.len()
+    }
+}
+
+impl ReadRegisterData for &[u16] {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        if offset >= self.register_span() {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        if buf.is_empty() {
+            return Ok(0);
+        }
+
+        let available = self.register_span() - offset;
+        let to_read = buf.len().min(available);
+        buf[..to_read].copy_from_slice(&self[offset..offset + to_read]);
+        Ok(to_read)
+    }
+}
+
 /// Read-only register enforced by the type system.
 #[derive(Debug)]
 pub struct RO<T> {
