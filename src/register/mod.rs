@@ -131,6 +131,35 @@ impl ReadRegisterData for &[u16] {
     }
 }
 
+impl RegisterData for &mut [u16] {
+    fn register_span(&self) -> usize {
+        self.len()
+    }
+}
+
+impl ReadRegisterData for &mut [u16] {
+    fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize> {
+        let slice: &[u16] = self;
+        ReadRegisterData::read(&slice, offset, buf)
+    }
+}
+
+impl WriteRegisterData for &mut [u16] {
+    fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize> {
+        if offset >= self.register_span() {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        let available = self.register_span() - offset;
+        if buf.len() > available {
+            return Err(RegisterError::OutOfBounds { offset });
+        }
+
+        self[offset..offset + buf.len()].copy_from_slice(buf);
+        Ok(buf.len())
+    }
+}
+
 /// Read-only register enforced by the type system.
 #[derive(Debug)]
 pub struct RO<T> {
