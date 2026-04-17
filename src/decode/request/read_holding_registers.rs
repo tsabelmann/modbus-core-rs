@@ -1,26 +1,24 @@
 use crate::{FunctionCode, FunctionKind, PduData};
 
-pub struct ReadHoldingRegistersRequestDecoder<'a, T> 
-where 
-    T: PduData
-{
-    pdu: &'a T
+pub struct RequestDecoder {
+    starting_address: u16,
+    quantity_of_registers: u16
 }
 
 #[non_exhaustive]
 #[repr(u8)]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ReadHoldingRegistersRequestDecoderError {
+pub enum DecoderError {
     NotEnoughData,
-    InvalidQuanitityOfRegisters,
+    InvalidQuantityOfRegisters,
     InvalidFunctionCode
 }
 
-impl<'a, T: PduData> ReadHoldingRegistersRequestDecoder<'a, T> {
-    pub fn new(pdu: &'a T) -> Result<ReadHoldingRegistersRequestDecoder<'a, T>, ReadHoldingRegistersRequestDecoderError> {
+impl RequestDecoder {
+    pub fn new(pdu: &dyn PduData) -> Result<RequestDecoder, DecoderError> {
         let required_length = 5;
         if pdu.pdu_data().len() < required_length {
-            Err(ReadHoldingRegistersRequestDecoderError::NotEnoughData)
+            Err(DecoderError::NotEnoughData)
         } else {
             let code = pdu.function_code();
             match code {
@@ -33,32 +31,25 @@ impl<'a, T: PduData> ReadHoldingRegistersRequestDecoder<'a, T> {
                     
                     // invalid number of registers
                     if (quantity_of_registers > 125) || (quantity_of_registers == 0) {
-                        return Err(ReadHoldingRegistersRequestDecoderError::InvalidQuanitityOfRegisters);
+                        return Err(DecoderError::InvalidQuantityOfRegisters);
                     }
 
-                    // to many registers to read
-                    if 0xFFFF - quantity_of_registers < starting_address {
-                        return Err(ReadHoldingRegistersRequestDecoderError::InvalidQuanitityOfRegisters);
-                    }
-
-                    Ok(ReadHoldingRegistersRequestDecoder { pdu })
+                    Ok(RequestDecoder { starting_address, quantity_of_registers })
                 }
-                _ => Err(ReadHoldingRegistersRequestDecoderError::InvalidFunctionCode)
+                _ => Err(DecoderError::InvalidFunctionCode)
             }
         }
     }
 
     pub fn function_code(&self) -> FunctionKind {
-        self.pdu.function_code()
+        FunctionKind::Normal(FunctionCode::ReadHoldingRegisters)
     }
 
     pub fn starting_address(&self) -> u16 {
-        let data = [self.pdu.pdu_data()[1], self.pdu.pdu_data()[2]];
-        u16::from_be_bytes(data)
+        self.starting_address
     }
 
     pub fn quantity_of_registers(&self) -> u16 {
-        let data = [self.pdu.pdu_data()[3], self.pdu.pdu_data()[4]];
-        u16::from_be_bytes(data)
+        self.quantity_of_registers
     }
 }
