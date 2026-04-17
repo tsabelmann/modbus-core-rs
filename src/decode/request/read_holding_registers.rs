@@ -1,6 +1,7 @@
 use crate::{FunctionCode, FunctionKind, PduData};
 
-pub struct RequestDecoder {
+
+pub struct Request {
     starting_address: u16,
     quantity_of_registers: u16
 }
@@ -8,17 +9,17 @@ pub struct RequestDecoder {
 #[non_exhaustive]
 #[repr(u8)]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum DecoderError {
+pub enum RequestError {
     NotEnoughData,
     InvalidQuantityOfRegisters,
     InvalidFunctionCode
 }
 
-impl RequestDecoder {
-    pub fn new(pdu: &dyn PduData) -> Result<RequestDecoder, DecoderError> {
+impl Request {
+    pub fn new(pdu: &dyn PduData) -> Result<Request, RequestError> {
         let required_length = 5;
         if pdu.pdu_data().len() < required_length {
-            Err(DecoderError::NotEnoughData)
+            Err(RequestError::NotEnoughData)
         } else {
             let code = pdu.function_code();
             match code {
@@ -31,12 +32,12 @@ impl RequestDecoder {
                     
                     // invalid number of registers
                     if (quantity_of_registers > 125) || (quantity_of_registers == 0) {
-                        return Err(DecoderError::InvalidQuantityOfRegisters);
+                        return Err(RequestError::InvalidQuantityOfRegisters);
                     }
 
-                    Ok(RequestDecoder { starting_address, quantity_of_registers })
+                    Ok(Request { starting_address, quantity_of_registers })
                 }
-                _ => Err(DecoderError::InvalidFunctionCode)
+                _ => Err(RequestError::InvalidFunctionCode)
             }
         }
     }
