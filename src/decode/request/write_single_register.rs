@@ -1,6 +1,6 @@
 use crate::{FunctionCode, FunctionKind, PduData};
 
-// ── DecoderError ──
+// ── RequestError ──
 
 #[non_exhaustive]
 #[repr(u8)]
@@ -10,7 +10,7 @@ pub enum RequestError {
     InvalidFunctionCode
 }
 
-// ── RequestDecoder ──
+// ── Request ──
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Request {
