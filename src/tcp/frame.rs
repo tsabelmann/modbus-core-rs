@@ -1,72 +1,122 @@
 use crate::{FunctionKind, AduData, PduData, PduDataMut};
-use crate::constants::MODBUS_TCP_FRAME_DATA_LENTGH;
 
-pub(crate) struct ValidModbusTcpFrame<'a> {
-    pub data: &'a mut [u8; MODBUS_TCP_FRAME_DATA_LENTGH],
-    pub data_length: usize
+// ── Traits ──
+
+pub trait MbapHeader {
+    fn transaction_id(&self) -> u16;
+    fn protocol_id(&self) -> u16;
+    fn length(&self) -> u16;
+    fn unit_id(&self) -> u8;
 }
 
-pub struct ModbusTcpFrame<'a> {
-    data: &'a mut [u8; MODBUS_TCP_FRAME_DATA_LENTGH],
-    data_length: usize
+pub trait MbapHeaderMut {
+    fn set_transaction_id(&mut self, id: u16);
+    fn set_unit_id(&mut self, id: u8);
 }
 
-impl<'a> ModbusTcpFrame<'a> {
-    pub(crate) const fn new(frame: ValidModbusTcpFrame<'a>) -> ModbusTcpFrame<'a> {
-        ModbusTcpFrame { data: frame.data, data_length: frame.data_length }
-    }
+// ── Mbap ──
 
-    pub const unsafe fn new_unchecked(data: &'a mut [u8; MODBUS_TCP_FRAME_DATA_LENTGH]) -> ModbusTcpFrame<'a> {
-        ModbusTcpFrame { data, data_length: MODBUS_TCP_FRAME_DATA_LENTGH }
-    }
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Mbap<'a> {
+    data: &'a [u8]
+}
 
-    pub const fn transaction_identifier(&self) -> u16 {
+impl<'a> MbapHeader for Mbap<'a> {
+    fn transaction_id(&self) -> u16 {
         let data = [self.data[0], self.data[1]];
         u16::from_be_bytes(data)
     }
 
-    pub const fn set_transaction_identifier(&mut self, transaction_id: u16) {
-        let data = transaction_id.to_be_bytes();
-        self.data[0] = data[0];
-        self.data[1] = data[1]
-    }
-
-    pub const fn protocol_identifier(&self) -> u16 {
+    fn protocol_id(&self) -> u16 {
         let data = [self.data[2], self.data[3]];
         u16::from_be_bytes(data)
     }
 
-    pub const fn length(&self) -> u16 {
+    fn length(&self) -> u16 {
         let data = [self.data[4], self.data[5]];
         u16::from_be_bytes(data)
     }
 
-    pub const fn set_length(&mut self, length: u16) {
-        let data = length.to_be_bytes();
-        self.data[4] = data[0];
-        self.data[5] = data[1];
-    }
-
-    pub const fn unit_identifier(&self) -> u8 {
+    fn unit_id(&self) -> u8 {
         self.data[6]
-    }
-
-    pub fn copy_to<'b>(&self, frame: &mut ModbusTcpFrame<'b>) {
-        let slice = &self.data[..self.data_length];
-        let slice_iter = slice.iter();
-        let frame_slice = &mut frame.data[..self.data_length];
-        let frame_slice_iter = frame_slice.iter_mut();
-
-        for (dest, src) in frame_slice_iter.zip(slice_iter) {
-            *dest = *src;
-        }
-        frame.data_length = self.data_length;
     }
 }
 
-/* ADU DATA */
+// ── MbapMut ──
 
-impl<'a> AduData for ModbusTcpFrame<'a> {
+pub struct MbapMut<'a> {
+    data: &'a mut [u8]
+}
+
+impl<'a> MbapHeader for MbapMut<'a> {
+    fn transaction_id(&self) -> u16 {
+        Mbap { data: self.data }.transaction_id()
+    }
+
+    fn protocol_id(&self) -> u16 {
+        Mbap { data: self.data }.protocol_id()
+    }
+
+    fn length(&self) -> u16 {
+        Mbap { data: self.data }.length()
+    }
+
+    fn unit_id(&self) -> u8 {
+        Mbap { data: self.data }.unit_id()
+    }
+}
+
+impl<'a> MbapHeaderMut for MbapMut<'a> {
+    fn set_transaction_id(&mut self, id: u16) {
+        let bytes = id.to_be_bytes();
+        self.data[0] = bytes[0];
+        self.data[1] = bytes[1];
+    }
+
+    fn set_unit_id(&mut self, id: u8) {
+        self.data[6] = id;
+    }
+}
+
+// ── Frame ──
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Frame {
+    data: [u8; Frame::FRAME_SIZE],
+    data_length: usize
+}
+
+impl Frame {
+    pub const FRAME_SIZE: usize = 260;
+    pub const MBAP_HEADER_SIZE: usize = 7;
+
+    pub const unsafe fn new_unchecked() -> Frame {
+        let mut data = [0u8; Frame::FRAME_SIZE];
+        let bytes = 254u16.to_be_bytes();
+        data[4] = bytes[0];
+        data[5] = bytes[1]; 
+        Frame { data, data_length: Frame::FRAME_SIZE }
+    }
+
+    pub fn mbap(&self) -> Mbap<'_> {
+        Mbap { data: &self.data[..Frame::MBAP_HEADER_SIZE] }
+    }
+
+    pub fn mbap_mut(&mut self) -> MbapMut<'_> {
+        MbapMut { data: &mut self.data[..Frame::MBAP_HEADER_SIZE] }
+    }
+
+    pub(crate) fn raw_mut(&mut self) -> &mut [u8; Frame::FRAME_SIZE] {
+        &mut self.data
+    }
+
+    pub(crate) fn set_len(&mut self, len: usize) {
+        debug_assert!(len <= Frame::FRAME_SIZE);
+        self.data_length = len.min(Frame::FRAME_SIZE);
+    }
+}
+
+impl AduData for Frame {
     fn adu_data(&self) -> & [u8] {
         &self.data[..self.data_length]
     }
@@ -76,11 +126,9 @@ impl<'a> AduData for ModbusTcpFrame<'a> {
     }
 }
 
-/* PDU DATA */
-
-impl<'a> PduData for ModbusTcpFrame<'a> {
+impl PduData for Frame {
     fn pdu_data(&self) -> & [u8] {
-        &self.data[7..self.data_length]
+        &self.data[Frame::MBAP_HEADER_SIZE..self.data_length]
     }
 
     fn function_code(&self) -> FunctionKind {
@@ -88,33 +136,33 @@ impl<'a> PduData for ModbusTcpFrame<'a> {
     }
 
     fn length(&self) -> Option<u16> {
-        Some(self.length())
+        Some(self.mbap().length())
     }
 }
 
-/* PDU DATA MUT */
+// /* PDU DATA MUT */
 
-impl<'a> PduDataMut for ModbusTcpFrame<'a> {
-    fn pdu_data_mut(&mut self) -> &mut [u8] {
-        &mut self.data[7..]
-    }
+// impl<'a> PduDataMut for Frame<'a> {
+//     fn pdu_data_mut(&mut self) -> &mut [u8] {
+//         &mut self.data[7..]
+//     }
 
-    fn set_function_code(&mut self, code: FunctionKind) {
-        self.data[7] = u8::from(code);
-    }
+//     fn set_function_code(&mut self, code: FunctionKind) {
+//         self.data[7] = u8::from(code);
+//     }
 
-    fn set_length(&mut self, length: u16) {
-        if length <= 254 {
-            // write length field
-            let data = length.to_be_bytes();
-            self.data[4] = data[0];
-            self.data[5] = data[1];
+//     fn set_length(&mut self, length: u16) {
+//         if length <= 254 {
+//             // write length field
+//             let data = length.to_be_bytes();
+//             self.data[4] = data[0];
+//             self.data[5] = data[1];
             
-            // set internal array length
-            self.data_length = (6 + length) as usize;
-        }
-    }
-}
+//             // set internal array length
+//             self.data_length = (6 + length) as usize;
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod frame_tests {}
