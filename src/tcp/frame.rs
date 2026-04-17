@@ -1,4 +1,4 @@
-use crate::{FunctionKind, AduData, PduData, PduDataMut};
+use crate::{FunctionKind, AduData, PduData};
 
 // ── Traits ──
 
@@ -90,6 +90,11 @@ impl Frame {
     pub const FRAME_SIZE: usize = 260;
     pub const MBAP_HEADER_SIZE: usize = 7;
 
+    /// Creates a new Modbus/TCP frame in an unsafe way.
+    /// 
+    /// # Safety
+    /// 
+    /// The user has to ensure that the frame is setup in the correct way.
     pub const unsafe fn new_unchecked() -> Frame {
         let mut data = [0u8; Frame::FRAME_SIZE];
         let bytes = 254u16.to_be_bytes();

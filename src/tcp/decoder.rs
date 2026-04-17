@@ -122,6 +122,12 @@ impl Decoder {
     }
 }
 
+impl Default for Decoder {
+    fn default() -> Self {
+        Decoder::new()
+    }
+}
+
 #[cfg(test)]
 mod decode_tests {    
     use super::*;
