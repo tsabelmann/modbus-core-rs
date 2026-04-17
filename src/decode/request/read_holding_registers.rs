@@ -13,6 +13,7 @@ pub enum RequestError {
 
 // ── Request ──
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Request {
     starting_address: u16,
     quantity_of_registers: u16
