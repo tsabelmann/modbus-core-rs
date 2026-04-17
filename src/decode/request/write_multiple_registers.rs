@@ -82,6 +82,17 @@ impl<'a> Request<'a> {
         let data = &self.pdu.pdu_data()[6..6 + self.byte_count() as usize];
         RegisterValueIter { data, index: 0 }
     }
+
+    pub fn write_to(&self, dest: &mut [u16]) -> usize {
+        let count = self.quantity_of_registers() as usize;
+        let bytes = &self.pdu.pdu_data()[6..];
+
+        for i in 0..count.min(dest.len()) {
+            dest[i] = u16::from_be_bytes([bytes[i * 2], bytes[i * 2 + 1]]);
+        }
+
+        count.min(dest.len())
+    }
 }
 
 impl<'a> IntoIterator for Request<'a> {
