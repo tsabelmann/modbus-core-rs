@@ -1,10 +1,6 @@
 use crate::{FunctionCode, FunctionKind, PduData};
 
-
-pub struct Request {
-    starting_address: u16,
-    quantity_of_registers: u16
-}
+// ── RequestError ──
 
 #[non_exhaustive]
 #[repr(u8)]
@@ -13,6 +9,13 @@ pub enum RequestError {
     NotEnoughData,
     InvalidQuantityOfRegisters,
     InvalidFunctionCode
+}
+
+// ── Request ──
+
+pub struct Request {
+    starting_address: u16,
+    quantity_of_registers: u16
 }
 
 impl Request {
