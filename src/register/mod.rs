@@ -100,11 +100,11 @@ pub trait RegisterData {
     fn register_span(&self) -> usize;
 }
 
-pub trait ReadRegisterData: RegisterData {
+pub trait ReadRegisterData {
     fn read(&self, offset: usize, buf: &mut [u16]) -> RegisterResult<usize>;
 }
 
-pub trait WriteRegisterData: RegisterData {
+pub trait WriteRegisterData {
     fn write(&mut self, offset: usize, buf: &[u16]) -> RegisterResult<usize>;
 }   
 
