@@ -21,7 +21,6 @@ pub enum Response {
     Exception(ExceptionCode)
 }
 
-
 impl Response {
     pub const MAX_PAYLOAD_LENGTH: usize = 4;
 
