@@ -20,6 +20,9 @@ pub struct Request<'a> {
 }
 
 impl<'a> Request<'a> {
+    pub const MIN_QUANTITY_OF_REGISTERS: u16 = 1;
+    pub const MAX_QUANTITY_OF_REGISTERS: u16 = 123;
+
     pub fn new(pdu: &'a dyn PduData) -> Result<Request<'a>, RequestError> {
         if pdu.pdu_data().len() < 6 {
             return Err(RequestError::NotEnoughData);
@@ -27,8 +30,8 @@ impl<'a> Request<'a> {
 
         match pdu.function_code() {
             FunctionKind::Normal(FunctionCode::WriteMultipleRegisters) => {
-                let data = [pdu.pdu_data()[1], pdu.pdu_data()[2]];
-                let starting_address = u16::from_be_bytes(data);
+                // let data = [pdu.pdu_data()[1], pdu.pdu_data()[2]];
+                // let starting_address = u16::from_be_bytes(data);
 
                 let data = [pdu.pdu_data()[3], pdu.pdu_data()[4]];
                 let quantity_of_registers = u16::from_be_bytes(data);
@@ -36,21 +39,17 @@ impl<'a> Request<'a> {
                 let byte_count = pdu.pdu_data()[5];
 
                 // invalid number of registers
-                if (quantity_of_registers > 123) || (quantity_of_registers == 0) {
+                if (quantity_of_registers > Self::MAX_QUANTITY_OF_REGISTERS) || (quantity_of_registers < Self::MIN_QUANTITY_OF_REGISTERS) {
                     return Err(RequestError::InvalidQuantityOfRegisters);
                 }
 
-                // to many registers to read
-                if 0xFFFF - quantity_of_registers < starting_address {
-                    return Err(RequestError::InvalidQuantityOfRegisters);
-                }
-
+                // not enough data
                 if pdu.pdu_data().len() < (6 + byte_count) as usize {
                     return Err(RequestError::NotEnoughData);
                 }
 
                 // invalid byte count
-                if ((2 * quantity_of_registers) as u8) != byte_count {
+                if 2 * quantity_of_registers != byte_count as u16 {
                     return Err(RequestError::InvalidByteCount);
                 }
 
