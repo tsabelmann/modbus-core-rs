@@ -1,4 +1,5 @@
 use crate::{FunctionKind, AduData, PduData};
+use crate::encode::FrameEncoder;
 
 // ── Traits ──
 
@@ -145,29 +146,29 @@ impl PduData for Frame {
     }
 }
 
-// /* PDU DATA MUT */
+impl FrameEncoder for Frame {
+    fn payload_mut(&mut self) -> &mut [u8] {
+        &mut self.data[Frame::MBAP_HEADER_SIZE + 1..]
+    }
 
-// impl<'a> PduDataMut for Frame<'a> {
-//     fn pdu_data_mut(&mut self) -> &mut [u8] {
-//         &mut self.data[7..]
-//     }
+    fn payload_capacity(&self) -> usize {
+        Self::FRAME_SIZE - Self::MBAP_HEADER_SIZE - 1
+    }
 
-//     fn set_function_code(&mut self, code: FunctionKind) {
-//         self.data[7] = u8::from(code);
-//     }
+    fn finalize(&mut self, code: FunctionKind, payload_len: usize) {
+        // function code
+        self.data[Self::MBAP_HEADER_SIZE] = u8::from(code);
 
-//     fn set_length(&mut self, length: u16) {
-//         if length <= 254 {
-//             // write length field
-//             let data = length.to_be_bytes();
-//             self.data[4] = data[0];
-//             self.data[5] = data[1];
-            
-//             // set internal array length
-//             self.data_length = (6 + length) as usize;
-//         }
-//     }
-// }
+        // MBAP length = unit_id + function_code + payload
+        let length = (1 + 1 + payload_len) as u16;
+        let bytes = length.to_be_bytes();
+        self.data[4] = bytes[0];
+        self.data[5] = bytes[1];
+
+        // Total frame length
+        self.data_length = Frame::MBAP_HEADER_SIZE + 1 + payload_len;
+    }
+}
 
 #[cfg(test)]
 mod frame_tests {}
