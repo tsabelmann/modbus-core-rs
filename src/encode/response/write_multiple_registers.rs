@@ -15,7 +15,7 @@ pub enum EncodeError {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Response {
     Normal {
-        register_address: u16,
+        starting_address: u16,
         quantity_of_registers: u16
     },
     Exception(ExceptionCode)
@@ -24,8 +24,8 @@ pub enum Response {
 impl Response {
     pub const MAX_PAYLOAD_LENGTH: usize = 4;
 
-    pub const fn new(register_address: u16, quantity_of_registers: u16) -> Response {
-        Response::Normal { register_address, quantity_of_registers }
+    pub const fn new(starting_address: u16, quantity_of_registers: u16) -> Response {
+        Response::Normal { starting_address, quantity_of_registers }
     }
 
     pub const fn new_exception(code: ExceptionCode) -> Response {
@@ -34,7 +34,7 @@ impl Response {
 
     pub fn encode(&self, frame: &mut dyn FrameEncoder) -> Result<(), EncodeError> {
         match self {
-            Response::Normal { register_address, quantity_of_registers } => {
+            Response::Normal { starting_address: register_address, quantity_of_registers } => {
                 let payload = frame.payload_mut();
                 if payload.len() < Self::MAX_PAYLOAD_LENGTH {
                     return Err(EncodeError::NotEnoughData);
