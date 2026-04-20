@@ -1,7 +1,3 @@
 pub mod read_holding_registers;
-
-mod write_multiple_registers;
-pub use write_multiple_registers::{WriteMultipleRegistersReponseEncoder, WriteMultipleRegistersReponseEncodeError, WriteMultipleRegistersReponseEncodeExceptionError};
-
-mod write_single_register;
-pub use write_single_register::{WriteSingleRegisterReponseEncoder, WriteSingleRegisterReponseEncodeError, WriteSingleRegisterReponseEncodeExceptionError};
+pub mod write_single_register;
+pub mod write_multiple_registers;
