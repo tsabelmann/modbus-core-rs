@@ -1,81 +1,76 @@
-use crate::{ExceptionCode, FunctionCode, FunctionKind, PduDataMut};
+use crate::{ExceptionCode, FunctionCode, FunctionKind};
+use crate::encode::FrameEncoder;
+
+// ── EncodeError ──
 
 #[repr(u8)]
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum WriteMultipleRegistersReponseEncodeError {
+pub enum EncodeError {
     NotEnoughData
 }
 
-#[repr(u8)]
-#[non_exhaustive]
+// ── Response ──
+
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum WriteMultipleRegistersReponseEncodeExceptionError {
-    NotEnoughData,
-    InvalidExceptionCode
+pub enum Response {
+    Normal {
+        register_address: u16,
+        quantity_of_registers: u16
+    },
+    Exception(ExceptionCode)
 }
 
-pub trait WriteMultipleRegistersReponseEncoder {
-    fn encode(&mut self, starting_address: u16, quantity_of_registers: u16) -> Result<(), WriteMultipleRegistersReponseEncodeError>; 
-    fn encode_exception(&mut self, code: ExceptionCode) -> Result<(), WriteMultipleRegistersReponseEncodeExceptionError>;
-}
+impl Response {
+    pub const MAX_PAYLOAD_LENGTH: usize = 4;
 
-impl<T: PduDataMut> WriteMultipleRegistersReponseEncoder for T {
-    fn encode(&mut self, starting_address: u16, quantity_of_registers: u16) -> Result<(), WriteMultipleRegistersReponseEncodeError> {
-        // check for size  
-        let required_length = 5;
-        if self.pdu_data_mut().len() < required_length {
-            return Err(WriteMultipleRegistersReponseEncodeError::NotEnoughData);   
-        }
-
-        // write function code
-        self.set_function_code(FunctionKind::Normal(FunctionCode::WriteMultipleRegisters));
-
-        // write starting address
-        let data = starting_address.to_be_bytes();
-        self.pdu_data_mut()[1] = data[0];
-        self.pdu_data_mut()[2] = data[1];
-        
-        // write quantity of registers
-        let data = quantity_of_registers.to_be_bytes();
-        self.pdu_data_mut()[3] = data[0];
-        self.pdu_data_mut()[4] = data[1];
-
-        // set length (necessary for TCP/IP based modbus frames)
-        let length = (1 + 5) as u16;
-        self.set_length(length);
-
-        // return Ok
-        Ok(())
+    pub const fn new(register_address: u16, quantity_of_registers: u16) -> Response {
+        Response::Normal { register_address, quantity_of_registers }
     }
 
-    fn encode_exception(&mut self, code: ExceptionCode) -> Result<(), WriteMultipleRegistersReponseEncodeExceptionError> {
-        // check the required data
-        let required_length = 2;
-        if self.pdu_data_mut().len() < required_length {
-            return Err(WriteMultipleRegistersReponseEncodeExceptionError::NotEnoughData);
+    pub const fn new_exception(code: ExceptionCode) -> Response {
+        Response::Exception(code)
+    }
+
+    pub fn encode(&self, frame: &mut dyn FrameEncoder) -> Result<(), EncodeError> {
+        match self {
+            Response::Normal { register_address, quantity_of_registers } => {
+                let payload = frame.payload_mut();
+                if payload.len() < Self::MAX_PAYLOAD_LENGTH {
+                    return Err(EncodeError::NotEnoughData);
+                }
+
+                // register address
+                let bytes = register_address.to_be_bytes();
+                payload[0] = bytes[0];
+                payload[1] = bytes[1];
+
+                // quantity of registers
+                let bytes = quantity_of_registers.to_be_bytes();
+                payload[2] = bytes[0];
+                payload[3] = bytes[1];
+
+                frame.finalize(
+                    FunctionKind::Normal(FunctionCode::WriteMultipleRegisters),
+                    Self::MAX_PAYLOAD_LENGTH,
+                );
+                Ok(())
+            },
+            Response::Exception(code) => {
+                let payload = frame.payload_mut();
+                if payload.is_empty() {
+                    return Err(EncodeError::NotEnoughData);
+                }
+
+                let raw = u8::from(*code);
+                payload[0] = raw;
+
+                frame.finalize(
+                    FunctionKind::Exception(FunctionCode::WriteMultipleRegisters),
+                    1,
+                );
+                Ok(())
+            },
         }
-
-        // set function code
-        self.set_function_code(FunctionKind::new_exception(FunctionCode::WriteMultipleRegisters));
-
-        // compute exception code
-        let exception_code = match code {
-            ExceptionCode::IllegalFunction => u8::from(code),
-            ExceptionCode::IllegalDataAddress => u8::from(code),
-            ExceptionCode::IllegalDataValue => u8::from(code),
-            ExceptionCode::ServerDeviceFailure => u8::from(code),
-            _ => return Err(WriteMultipleRegistersReponseEncodeExceptionError::InvalidExceptionCode)
-        };
-
-        // set exception code
-        self.pdu_data_mut()[1] = exception_code;
-
-        // set length (necessary for TCP/IP based modbus frames)
-        let length = (1 + required_length)  as u16;
-        self.set_length(length);
-
-        // return Ok
-        Ok(())
     }
 }
