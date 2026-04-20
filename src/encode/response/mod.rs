@@ -1,5 +1,4 @@
-mod read_holding_registers;
-pub use read_holding_registers::{ReadHoldingRegistersReponseEncoder, ReadHoldingRegistersReponseEncodeError, ReadHoldingRegistersReponseEncodeExceptionError};
+pub mod read_holding_registers;
 
 mod write_multiple_registers;
 pub use write_multiple_registers::{WriteMultipleRegistersReponseEncoder, WriteMultipleRegistersReponseEncodeError, WriteMultipleRegistersReponseEncodeExceptionError};
